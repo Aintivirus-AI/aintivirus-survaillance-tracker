@@ -1,0 +1,34 @@
+[
+  {
+    "id": 999000001,
+    "lat": 34.05223,
+    "lon": -118.24368,
+    "tags": {
+      "name": "Downtown ALPR Camera",
+      "addr:city": "Los Angeles",
+      "addr:state": "CA",
+      "addr:country": "US",
+      "operator": "City of Los Angeles",
+      "man_made": "surveillance",
+      "surveillance": "outdoor",
+      "surveillance:type": "ALPR"
+    }
+  },
+  {
+    "id": 999000002,
+    "lat": 40.71278,
+    "lon": -74.00597,
+    "tags": {
+      "name": "Broadway & Chambers LPR",
+      "addr:city": "New York",
+      "addr:state": "NY",
+      "addr:country": "US",
+      "man_made": "surveillance",
+      "surveillance": "outdoor",
+      "surveillance:type": "ALPR",
+      "operator": "NYPD"
+    }
+  }
+]
+
+

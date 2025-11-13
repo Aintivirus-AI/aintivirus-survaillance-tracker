@@ -1,0 +1,47 @@
+[
+  {
+    "cityId": "center-point-al",
+    "jurisdiction": "Center Point, AL",
+    "url": "https://www.redlightcameralist.com/poi/United-States-of-America/Alabama/Center-Point/",
+    "records": [
+      {
+        "uid": "center-point-25th-ave-ne-sweeney-hollow-rd",
+        "address": "25th Ave NE & Sweeney Hollow Rd"
+      },
+      {
+        "uid": "center-point-carson-rd-sun-valley-rd",
+        "address": "Carson Rd & Sun Valley Rd - 23rd Ave NW"
+      },
+      {
+        "uid": "center-point-hwy75-saturn-ln",
+        "address": "Center Point Pkwy - Hwy 75 & Saturn Ln"
+      },
+      {
+        "uid": "center-point-hwy75-13th-ave-ne",
+        "address": "Center Point Pkwy - Hwy 75 & 13th Ave NE"
+      },
+      {
+        "uid": "center-point-huffman-rd-13th-ave-nw",
+        "address": "Huffman Rd & 13th Ave NW"
+      },
+      {
+        "uid": "center-point-old-springville-mary-vann",
+        "address": "Old Springville Rd & Mary Vann Ln"
+      },
+      {
+        "uid": "center-point-old-springville-polly-reed",
+        "address": "Old Springville Rd & Polly Reed Rd NE - Ruth Dr"
+      },
+      {
+        "uid": "center-point-reed-rd-polly-reed-rd",
+        "address": "Reed Rd NE & Polly Reed Rd NE"
+      },
+      {
+        "uid": "center-point-wood-dr-6th-st",
+        "address": "Wood Dr NE & 6th St NE"
+      }
+    ]
+  }
+]
+
+

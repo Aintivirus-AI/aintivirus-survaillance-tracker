@@ -1,0 +1,16 @@
+<svg width="48" height="64" viewBox="0 0 48 64" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="pin-gradient" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#ff5a5f" />
+      <stop offset="100%" stop-color="#c9184a" />
+    </linearGradient>
+  </defs>
+  <path
+    d="M24 0C13.508 0 5 8.55 5 19.094c0 12.552 14.486 28.128 17.26 30.97a1.5 1.5 0 0 0 2.162 0C27.196 47.222 43 31.646 43 19.094 43 8.55 34.492 0 24 0Z"
+    fill="url(#pin-gradient)"
+  />
+  <circle cx="24" cy="19" r="8" fill="#ffffff" opacity="0.92" />
+  <circle cx="24" cy="19" r="5" fill="#2b2d42" />
+  <ellipse cx="24" cy="59" rx="7.5" ry="3" fill="#000000" opacity="0.15" />
+</svg>
+
