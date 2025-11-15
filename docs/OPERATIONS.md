@@ -137,6 +137,17 @@ Keep secrets (Redis credentials, emails) in your secret manager and inject them 
 
 - `/api/sources` includes `lastIngestedAt` and `totalRecords`. Alert if any `lastIngestedAt` lags beyond expected cadence (1 h for hourly sources, 24 h for daily).
 - `/api/dataset/latest` `generatedAt` should move forward after each connector run. When the frontend is deployed behind the same origin as the API, leave `VITE_API_BASE_URL` empty; otherwise the UI calls `/api/api/dataset/latest` and shows the offline snapshot.
+- To deploy a specific frontend branch to a server:
+  ```bash
+  cd /var/www/aintivirus-survaillance-tracker/frontend/app
+  git fetch origin my-feature-branch
+  git checkout my-feature-branch
+  npm ci            # or npm install
+  npm run build
+  sudo cp -r dist/* /var/www/aintivirus-frontend/
+  sudo systemctl reload nginx
+  ```
+  Adjust directories/branch names for your setup; rebuild after every checkout before syncing `dist/` to your web root.
 
 ---
 
