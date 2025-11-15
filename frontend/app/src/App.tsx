@@ -49,6 +49,14 @@ function getStatusClass(status: string): string {
 
 const FRAME_SEGMENTS = [0, 1, 2];
 const PAGE_SIZE = 5;
+const REDLIGHT_SOURCE_KEY = 'redlightcameralist';
+const LICENSE_SOURCE_KEY = 'overpass-alpr';
+const ATLAS_SOURCE_KEY = 'atlas-of-surveillance';
+const SOURCE_RENDER_ORDER = [REDLIGHT_SOURCE_KEY, LICENSE_SOURCE_KEY, ATLAS_SOURCE_KEY];
+const SCROLL_TARGETS = {
+  redlight: `source-${REDLIGHT_SOURCE_KEY}`,
+  license: `source-${LICENSE_SOURCE_KEY}`,
+} as const;
 
 function UsFlagIcon(props: SVGProps<SVGSVGElement>) {
   return (
@@ -370,7 +378,7 @@ function SourceCard({
   });
 
   return (
-    <article className="source-card">
+    <article className="source-card" id={`source-${source.key}`}>
       <header className="source-header">
         <h2>{source.title}</h2>
         <div className="source-meta">
@@ -570,25 +578,42 @@ function App() {
       return [];
     }
 
-    const priorityKeys = new Set(['redlightcameralist']);
-    const deferredKeys = new Set(['overpass-alpr', 'atlas-of-surveillance']);
-
-    const priority: DatasetSource[] = [];
-    const middle: DatasetSource[] = [];
-    const deferred: DatasetSource[] = [];
-
-    dataset.sources.forEach((source) => {
-      if (priorityKeys.has(source.key)) {
-        priority.push(source);
-      } else if (deferredKeys.has(source.key)) {
-        deferred.push(source);
-      } else {
-        middle.push(source);
+    const seenKeys = new Set<string>();
+    const prioritized = SOURCE_RENDER_ORDER.map((key) =>
+      dataset.sources.find((source) => source.key === key),
+    ).filter((source): source is DatasetSource => {
+      if (!source || seenKeys.has(source.key)) {
+        return false;
       }
+      seenKeys.add(source.key);
+      return true;
     });
 
-    return [...priority, ...middle, ...deferred];
+    const remainder = dataset.sources.filter((source) => !seenKeys.has(source.key));
+
+    return [...prioritized, ...remainder];
   }, [dataset]);
+
+  const mapInsertionKey = useMemo(() => {
+    if (orderedSources.length === 0) {
+      return undefined;
+    }
+    const licenseSourcePresent = orderedSources.some(
+      (source) => source.key === LICENSE_SOURCE_KEY,
+    );
+    return licenseSourcePresent ? LICENSE_SOURCE_KEY : orderedSources[0]?.key;
+  }, [orderedSources]);
+
+  const scrollToSection = useCallback((targetId: string) => {
+    if (typeof document === 'undefined') {
+      return;
+    }
+    const target = document.getElementById(targetId);
+    if (!target) {
+      return;
+    }
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
 
   const handleSelectRecord = useCallback(
     (record: DatasetRecord) => {
@@ -685,6 +710,22 @@ function App() {
               <strong>{formatDate(lastGeneratedAt)}</strong>
             </div>
           </div>
+          <div className="hero-quick-links" aria-label="Quick navigation">
+            <button
+              type="button"
+              className="hero-quick-link-button"
+              onClick={() => scrollToSection(SCROLL_TARGETS.redlight)}
+            >
+              Red-light cameras
+            </button>
+            <button
+              type="button"
+              className="hero-quick-link-button"
+              onClick={() => scrollToSection(SCROLL_TARGETS.license)}
+            >
+              License plate readers
+            </button>
+          </div>
         </header>
 
         <main className="content-shell">
@@ -708,14 +749,14 @@ function App() {
           {dataset ? (
             orderedSources.length > 0 ? (
               <section className="sources-grid">
-                {orderedSources.map((source, index) => (
+                {orderedSources.map((source) => (
                   <Fragment key={source.key}>
                     <SourceCard
                       onSelectRecord={handleSelectRecord}
                       selectedRecordId={selectedRecord?.uid}
                       source={source}
                     />
-                    {index === 0 ? (
+                    {mapInsertionKey && source.key === mapInsertionKey ? (
                       <InteractiveMap ref={mapPanelRef} record={selectedRecord} />
                     ) : null}
                   </Fragment>

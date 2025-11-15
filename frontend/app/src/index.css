@@ -811,6 +811,37 @@ body.nav-no-scroll {
   margin-top: 1rem;
 }
 
+.hero-quick-links {
+  display: none;
+}
+
+.hero-quick-link-button {
+  flex: 1;
+  border: 1px solid rgba(59, 130, 246, 0.45);
+  border-radius: 16px;
+  padding: 0.85rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  background: rgba(12, 20, 38, 0.8);
+  box-shadow:
+    inset 0 1px 0 rgba(148, 163, 184, 0.1),
+    0 12px 24px rgba(2, 6, 23, 0.45);
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.hero-quick-link-button:hover,
+.hero-quick-link-button:focus-visible {
+  border-color: rgba(59, 130, 246, 0.75);
+  background: rgba(37, 99, 235, 0.35);
+  outline: none;
+  transform: translateY(-1px);
+}
+
 .metric-card {
   flex: 1;
   min-width: 0;
@@ -1730,6 +1761,10 @@ button.refresh-button:hover {
     gap: 0.3rem;
   }
 
+  .hero-quick-links {
+    flex-direction: column;
+  }
+
   .source-pagination-button {
     flex: 1 1 100%;
     min-width: 0;
@@ -1982,6 +2017,12 @@ button.refresh-button:hover {
 
   .hero-metrics {
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+
+  .hero-quick-links {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
   }
 
   .hero-metrics .metric-card:last-child {
