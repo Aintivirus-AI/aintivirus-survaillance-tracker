@@ -411,10 +411,12 @@ function SourceCard({
                   role="row"
                   tabIndex={0}
                 >
-                  <td>{record.jurisdiction ?? '—'}</td>
-                  <td className="col-location-cell">
+                  <td data-label="Jurisdiction">
+                    <span className="cell-value">{record.jurisdiction ?? '—'}</span>
+                  </td>
+                  <td className="col-location-cell" data-label={locationColumnLabel}>
                     {isOverpass ? (
-                      <div className="overpass-details">
+                      <div className="overpass-details cell-value">
                         <div className="overpass-details-primary">
                           {primaryDetail}
                         </div>
@@ -437,12 +439,14 @@ function SourceCard({
                         ) : null}
                       </div>
                     ) : (
-                      record.address ?? '—'
+                      <span className="cell-value">{record.address ?? '—'}</span>
                     )}
                   </td>
-                  <td>
-                    <span className={`badge ${record.category ?? 'other'}`}>
-                      {record.category ?? 'other'}
+                  <td data-label="Category">
+                    <span className="cell-value">
+                      <span className={`badge ${record.category ?? 'other'}`}>
+                        {record.category ?? 'other'}
+                      </span>
                     </span>
                   </td>
                 </tr>

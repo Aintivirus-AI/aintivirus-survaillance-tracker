@@ -57,7 +57,7 @@ Optional for development:
    cd frontend/app
    npm run dev
    ```
-   - Vite serves the UI on `5173` by default; point `VITE_API_BASE_URL` at the backend.
+   - Vite serves the UI on `5173` by default; for same-origin reverse proxies leave `VITE_API_BASE_URL` empty and let the web server forward `/api/*` to the backend.
 
 Visit http://localhost:5173 to explore the dataset. The UI fetches `GET /api/dataset/latest` and falls back to `/fallback-dataset.json` if the API is offline.
 
