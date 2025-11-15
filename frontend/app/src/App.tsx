@@ -304,6 +304,71 @@ function SourceCard({
   const rangeEnd = hasMatches ? rangeStart + pagedRecords.length - 1 : 0;
   const isFiltered = searchTerm.trim().length > 0;
 
+  const pagedRecordViews = pagedRecords.map((record) => {
+    const isSelected = record.uid === selectedRecordId;
+    const tags = isOverpass ? getOverpassTags(record) : undefined;
+    const operator = tags?.operator;
+    const manufacturer = tags?.manufacturer;
+    const direction = tags?.direction;
+    const coordinates = isOverpass ? formatRecordCoordinates(record) : undefined;
+    const sourceUrl = isOverpass ? getRecordSourceUrl(record) : undefined;
+    const primaryDetail = operator ?? record.address ?? '—';
+    const secondaryDetail =
+      operator && record.address && operator !== record.address ? record.address : undefined;
+    const metaItems: string[] = [];
+    if (manufacturer) {
+      metaItems.push(`Manufacturer: ${manufacturer}`);
+    }
+    if (direction) {
+      metaItems.push(`Direction: ${direction}°`);
+    }
+    if (coordinates) {
+      metaItems.push(`Coords: ${coordinates}`);
+    }
+
+    const renderOverpassDetails = (extraClassName?: string) => {
+      const classes = ['overpass-details'];
+      if (extraClassName) {
+        classes.push(extraClassName);
+      }
+      return (
+        <div className={classes.join(' ')}>
+          <div className="overpass-details-primary">{primaryDetail}</div>
+          {secondaryDetail ? (
+            <div className="overpass-details-secondary">{secondaryDetail}</div>
+          ) : null}
+          {metaItems.length > 0 ? (
+            <div className="overpass-details-meta">{metaItems.join(' • ')}</div>
+          ) : null}
+          {sourceUrl ? (
+            <div className="overpass-details-link">
+              <a href={sourceUrl} target="_blank" rel="noreferrer">
+                View on OSM
+              </a>
+            </div>
+          ) : null}
+        </div>
+      );
+    };
+
+    const tableLocationContent = isOverpass
+      ? renderOverpassDetails('cell-value')
+      : <span className="cell-value">{record.address ?? '—'}</span>;
+
+    const cardLocationContent = isOverpass
+      ? renderOverpassDetails()
+      : <p className="record-card-text">{record.address ?? '—'}</p>;
+
+    return {
+      record,
+      isSelected,
+      tableLocationContent,
+      cardLocationContent,
+      categoryClassName: `badge ${record.category ?? 'other'}`,
+      categoryLabel: record.category ?? 'other',
+    };
+  });
+
   return (
     <article className="source-card">
       <header className="source-header">
@@ -316,7 +381,9 @@ function SourceCard({
             </a>
           ) : null}
         </div>
-        {source.description ? <p>{source.description}</p> : null}
+        {source.description ? (
+          <p className="source-description">{source.description}</p>
+        ) : null}
       </header>
 
       <div className="source-controls">
@@ -364,94 +431,35 @@ function SourceCard({
           </tr>
         </thead>
         <tbody>
-          {pagedRecords.length > 0 ? (
-            pagedRecords.map((record) => {
-              const isSelected = record.uid === selectedRecordId;
-              const tags = isOverpass ? getOverpassTags(record) : undefined;
-              const operator = tags?.operator;
-              const manufacturer = tags?.manufacturer;
-              const direction = tags?.direction;
-              const coordinates = isOverpass
-                ? formatRecordCoordinates(record)
-                : undefined;
-              const sourceUrl = isOverpass
-                ? getRecordSourceUrl(record)
-                : undefined;
-              const primaryDetail =
-                operator ?? record.address ?? '—';
-              const secondaryDetail =
-                operator &&
-                record.address &&
-                operator !== record.address
-                  ? record.address
-                  : undefined;
-              const metaItems: string[] = [];
-              if (manufacturer) {
-                metaItems.push(`Manufacturer: ${manufacturer}`);
-              }
-              if (direction) {
-                metaItems.push(`Direction: ${direction}°`);
-              }
-              if (coordinates) {
-                metaItems.push(`Coords: ${coordinates}`);
-              }
-
-              return (
-                <tr
-                  aria-selected={isSelected}
-                  className={`records-row${isSelected ? ' records-row-selected' : ''}`}
-                  key={record.uid}
-                  onClick={() => onSelectRecord(record)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault();
-                      onSelectRecord(record);
-                    }
-                  }}
-                  role="row"
-                  tabIndex={0}
-                >
-                  <td data-label="Jurisdiction">
-                    <span className="cell-value">{record.jurisdiction ?? '—'}</span>
-                  </td>
-                  <td className="col-location-cell" data-label={locationColumnLabel}>
-                    {isOverpass ? (
-                      <div className="overpass-details cell-value">
-                        <div className="overpass-details-primary">
-                          {primaryDetail}
-                        </div>
-                        {secondaryDetail ? (
-                          <div className="overpass-details-secondary">
-                            {secondaryDetail}
-                          </div>
-                        ) : null}
-                        {metaItems.length > 0 ? (
-                          <div className="overpass-details-meta">
-                            {metaItems.join(' • ')}
-                          </div>
-                        ) : null}
-                        {sourceUrl ? (
-                          <div className="overpass-details-link">
-                            <a href={sourceUrl} target="_blank" rel="noreferrer">
-                              View on OSM
-                            </a>
-                          </div>
-                        ) : null}
-                      </div>
-                    ) : (
-                      <span className="cell-value">{record.address ?? '—'}</span>
-                    )}
-                  </td>
-                  <td data-label="Category">
-                    <span className="cell-value">
-                      <span className={`badge ${record.category ?? 'other'}`}>
-                        {record.category ?? 'other'}
-                      </span>
-                    </span>
-                  </td>
-                </tr>
-              );
-            })
+          {pagedRecordViews.length > 0 ? (
+            pagedRecordViews.map(({ record, isSelected, tableLocationContent, categoryClassName, categoryLabel }) => (
+              <tr
+                aria-selected={isSelected}
+                className={`records-row${isSelected ? ' records-row-selected' : ''}`}
+                key={record.uid}
+                onClick={() => onSelectRecord(record)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    onSelectRecord(record);
+                  }
+                }}
+                role="row"
+                tabIndex={0}
+              >
+                <td data-label="Jurisdiction">
+                  <span className="cell-value">{record.jurisdiction ?? '—'}</span>
+                </td>
+                <td className="col-location-cell" data-label={locationColumnLabel}>
+                  {tableLocationContent}
+                </td>
+                <td data-label="Category">
+                  <span className="cell-value">
+                    <span className={categoryClassName}>{categoryLabel}</span>
+                  </span>
+                </td>
+              </tr>
+            ))
           ) : (
             <tr>
               <td className="records-empty" colSpan={3}>
@@ -461,6 +469,44 @@ function SourceCard({
           )}
         </tbody>
       </table>
+
+      <div className="records-list" role="list">
+        {pagedRecordViews.length > 0 ? (
+          pagedRecordViews.map(({ record, isSelected, cardLocationContent, categoryClassName, categoryLabel }) => (
+            <article
+              className={`record-card${isSelected ? ' record-card-selected' : ''}`}
+              key={`${record.uid}-card`}
+              onClick={() => onSelectRecord(record)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  onSelectRecord(record);
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              aria-pressed={isSelected}
+            >
+              <div className="record-card-row">
+                <span className="record-card-label">Jurisdiction</span>
+                <span className="record-card-value">{record.jurisdiction ?? '—'}</span>
+              </div>
+              <div className="record-card-row">
+                <span className="record-card-label">{locationColumnLabel}</span>
+                <div className="record-card-value record-card-value-rich">{cardLocationContent}</div>
+              </div>
+              <div className="record-card-row record-card-row-inline">
+                <span className="record-card-label">Category</span>
+                <span className="record-card-value">
+                  <span className={categoryClassName}>{categoryLabel}</span>
+                </span>
+              </div>
+            </article>
+          ))
+        ) : (
+          <div className="records-card-empty">No records match the current search.</div>
+        )}
+      </div>
 
       <footer className="records-footer">
         <span>Snapshot: {formatDate(source.snapshot.createdAt)}</span>
