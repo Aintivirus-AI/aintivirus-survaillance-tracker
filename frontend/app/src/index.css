@@ -811,6 +811,37 @@ body.nav-no-scroll {
   margin-top: 1rem;
 }
 
+.hero-quick-links {
+  display: none;
+}
+
+.hero-quick-link-button {
+  flex: 1;
+  border: 1px solid rgba(59, 130, 246, 0.45);
+  border-radius: 16px;
+  padding: 0.85rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  background: rgba(12, 20, 38, 0.8);
+  box-shadow:
+    inset 0 1px 0 rgba(148, 163, 184, 0.1),
+    0 12px 24px rgba(2, 6, 23, 0.45);
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.hero-quick-link-button:hover,
+.hero-quick-link-button:focus-visible {
+  border-color: rgba(59, 130, 246, 0.75);
+  background: rgba(37, 99, 235, 0.35);
+  outline: none;
+  transform: translateY(-1px);
+}
+
 .metric-card {
   flex: 1;
   min-width: 0;
@@ -996,6 +1027,14 @@ button.refresh-button:hover {
   color: #cbd5f5;
 }
 
+.source-description {
+  margin: 0.45rem 0 0;
+  color: #cbd5f5;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  text-wrap: balance;
+}
+
 .badge {
   display: inline-flex;
   align-items: center;
@@ -1025,6 +1064,95 @@ button.refresh-button:hover {
   font-size: 0.9rem;
 }
 
+.records-list {
+  display: none;
+}
+
+.record-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(59, 130, 246, 0.16);
+  background: rgba(15, 23, 42, 0.78);
+  box-shadow:
+    inset 0 1px 0 rgba(148, 163, 184, 0.08),
+    0 10px 20px rgba(15, 23, 42, 0.35);
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    transform 0.15s ease;
+}
+
+.record-card:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.6);
+  outline-offset: 2px;
+}
+
+.record-card:hover {
+  border-color: rgba(59, 130, 246, 0.4);
+  background: rgba(15, 23, 42, 0.85);
+}
+
+.record-card-selected {
+  border-color: rgba(59, 130, 246, 0.6);
+  background: rgba(37, 99, 235, 0.12);
+  box-shadow:
+    inset 0 0 0 1px rgba(59, 130, 246, 0.5),
+    0 12px 28px rgba(15, 23, 42, 0.4);
+}
+
+.record-card-disabled {
+  cursor: default;
+  pointer-events: none;
+  opacity: 0.92;
+}
+
+.record-card-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.record-card-row-inline {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.record-card-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(148, 163, 184, 0.9);
+}
+
+.record-card-value {
+  color: #e2e8f0;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.record-card-value-rich .overpass-details {
+  gap: 0.35rem;
+}
+
+.record-card-text {
+  margin: 0;
+  color: #e2e8f0;
+  line-height: 1.45;
+}
+
+.records-card-empty {
+  border: 1px dashed rgba(59, 130, 246, 0.3);
+  border-radius: 14px;
+  padding: 1.25rem;
+  text-align: center;
+  color: rgba(203, 213, 225, 0.9);
+}
+
 .records-row {
   cursor: pointer;
   transition:
@@ -1051,6 +1179,14 @@ button.refresh-button:hover {
   color: #f8fafc;
 }
 
+.records-row-disabled {
+  cursor: default;
+}
+
+.records-row-disabled:hover {
+  background-color: transparent;
+}
+
 .records-table thead {
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -1075,6 +1211,43 @@ button.refresh-button:hover {
   word-break: break-word;
 }
 
+.cell-value {
+  display: block;
+  min-width: 0;
+}
+
+.overpass-details {
+  display: grid;
+  gap: 0.35rem;
+  color: #cbd5f5;
+}
+
+.overpass-details-primary {
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.overpass-details-secondary {
+  color: #e2e8f0;
+  font-size: 0.92rem;
+}
+
+.overpass-details-meta {
+  color: rgba(203, 213, 225, 0.8);
+  font-size: 0.82rem;
+}
+
+.overpass-details-link a {
+  color: #38bdf8;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.overpass-details-link a:hover,
+.overpass-details-link a:focus-visible {
+  text-decoration: underline;
+}
+
 .records-row:hover {
   background-color: rgba(148, 163, 184, 0.08);
 }
@@ -1091,6 +1264,10 @@ button.refresh-button:hover {
   align-items: center;
   font-size: 0.8rem;
   color: #cbd5f5;
+}
+
+.source-mobile-highlight {
+  display: none;
 }
 
 .empty-state {
@@ -1169,7 +1346,12 @@ button.refresh-button:hover {
 .map-container {
   height: 100%;
   width: 100%;
+  min-width: 0;
   background: rgba(10, 16, 32, 0.95);
+}
+
+.map-panel .leaflet-container {
+  min-width: 0;
 }
 
 .map-placeholder {
@@ -1541,6 +1723,71 @@ button.refresh-button:hover {
 }
 
 @media (max-width: 540px) {
+  .hero {
+    padding: 1.5rem 1.15rem 2rem;
+    gap: 1rem;
+  }
+
+  .hero-top {
+    gap: 1rem;
+  }
+
+  .brand-block {
+    gap: 0.75rem;
+  }
+
+  .brand-logo {
+    width: 100px;
+  }
+
+  .eye-logo {
+    max-width: 100px;
+  }
+
+  .actions {
+    gap: 0.5rem;
+  }
+
+  .brand {
+    font-size: 1.6rem;
+  }
+
+  .brand-copy p {
+    font-size: 0.9rem;
+  }
+
+  .status-chip {
+    font-size: 0.82rem;
+    gap: 0.45rem;
+  }
+
+  button.refresh-button {
+    font-size: 0.9rem;
+    padding: 0.7rem 0.95rem;
+  }
+
+  .source-card,
+  .map-panel {
+    padding: 1.25rem 1rem;
+  }
+
+  .record-card {
+    padding: 0.9rem;
+  }
+
+  .record-card-row {
+    gap: 0.3rem;
+  }
+
+  .hero-quick-links {
+    flex-direction: column;
+  }
+
+  .source-pagination-button {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
   .live-feeds-intro h2 {
     font-size: 1.35rem;
   }
@@ -1751,20 +1998,26 @@ button.refresh-button:hover {
 
   .hero-top {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+    gap: 1.25rem;
   }
 
   .hero-controls {
     width: 100%;
-    align-items: flex-start;
-    gap: 0.75rem;
+    align-items: stretch;
+    gap: 1rem;
   }
 
   .region-selector {
-    justify-content: flex-start;
+    width: 100%;
+    justify-content: center;
   }
 
   .brand-block {
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
     gap: 1rem;
   }
 
@@ -1777,34 +2030,123 @@ button.refresh-button:hover {
   }
 
   .brand {
-    font-size: 1.9rem;
+    font-size: 1.8rem;
   }
 
   .hero-metrics {
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   }
 
+  .hero-quick-links {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+  }
+
+  .hero-metrics .metric-card:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .brand-copy {
+    width: 100%;
+    display: grid;
+    gap: 0.4rem;
+    text-align: center;
+  }
+
+  .brand-copy p {
+    margin: 0.35rem 0 0;
+    font-size: 0.96rem;
+  }
+
+  .actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+  }
+
+  .status-chip {
+    width: 100%;
+    justify-content: center;
+  }
+
+  button.refresh-button {
+    width: 100%;
+  }
+
   .sources-grid {
     grid-template-columns: 1fr;
   }
 
+  .source-card {
+    padding: 1.45rem 1.3rem;
+  }
+
+  .source-header {
+    gap: 0.6rem;
+  }
+
+  .source-description {
+    margin: 0;
+    font-size: 0.96rem;
+    line-height: 1.5;
+    color: rgba(226, 232, 240, 0.92);
+    width: 100%;
+    text-align: left;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    hyphens: auto;
+  }
+
   .records-table {
-    display: block;
-    overflow-x: auto;
+    display: none;
+  }
+
+  .records-list {
+    display: grid;
+    gap: 0.9rem;
+  }
+
+  .records-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
   }
 
   .source-controls {
     flex-direction: column;
     align-items: stretch;
-    gap: 0.85rem;
+    gap: 0.65rem;
+  }
+
+  .source-search {
+    max-width: 100%;
+    width: 100%;
+    flex: none;
   }
 
   .source-pagination {
-    justify-content: space-between;
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.75rem;
+  }
+
+  .source-pagination-status {
+    width: 100%;
+    order: -1;
+    text-align: center;
+  }
+
+  .source-pagination-button {
+    flex: 1 1 140px;
+    min-width: 120px;
   }
 
   .map-panel {
     min-height: 380px;
+    padding: 1.45rem 1.3rem;
   }
 
   .map-canvas {
@@ -1839,6 +2181,120 @@ button.refresh-button:hover {
   .footer-social-link {
     width: 34px;
     height: 34px;
+  }
+
+  .source-card-priority {
+    border-color: rgba(59, 130, 246, 0.28);
+    background:
+      radial-gradient(circle at 12% 0%, rgba(59, 130, 246, 0.2), transparent 60%),
+      radial-gradient(circle at 90% 12%, rgba(14, 165, 233, 0.26), transparent 55%),
+      rgba(8, 13, 28, 0.92);
+    box-shadow:
+      0 0 36px rgba(37, 99, 235, 0.28),
+      0 24px 60px rgba(2, 8, 23, 0.7);
+  }
+
+  .source-mobile-highlight {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .source-mobile-highlight-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.85rem 1rem;
+    border-radius: 18px;
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    background: rgba(12, 18, 38, 0.9);
+    box-shadow:
+      inset 0 1px 0 rgba(148, 163, 184, 0.12),
+      0 12px 24px rgba(2, 8, 23, 0.55);
+  }
+
+  .source-mobile-highlight-label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(203, 213, 225, 0.9);
+  }
+
+  .source-mobile-highlight-card strong {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #f8fafc;
+  }
+
+  .source-mobile-highlight-caption {
+    font-size: 0.75rem;
+    color: rgba(191, 219, 254, 0.85);
+  }
+
+  .record-card-featured-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.85rem;
+  }
+
+  .record-card-featured-jurisdiction {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .record-card-featured-label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(148, 163, 184, 0.85);
+  }
+
+  .record-card-featured-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #f8fafc;
+  }
+
+  .record-card-featured-category .badge {
+    font-size: 0.7rem;
+  }
+
+  .record-card-featured-category {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .record-card-featured-detail {
+    margin-top: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .record-card-featured-value {
+    font-size: 0.92rem;
+    color: #e2e8f0;
+    line-height: 1.5;
+  }
+
+  .record-card-featured-meta {
+    margin-top: 0.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.6rem;
+  }
+
+  .record-card-featured-meta-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #bfdbfe;
+    background: rgba(59, 130, 246, 0.22);
   }
 }
 

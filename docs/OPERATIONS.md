@@ -136,7 +136,18 @@ Keep secrets (Redis credentials, emails) in your secret manager and inject them 
 ### 4.5 Validating data freshness
 
 - `/api/sources` includes `lastIngestedAt` and `totalRecords`. Alert if any `lastIngestedAt` lags beyond expected cadence (1 h for hourly sources, 24 h for daily).
-- `/api/dataset/latest` `generatedAt` should move forward after each connector run.
+- `/api/dataset/latest` `generatedAt` should move forward after each connector run. When the frontend is deployed behind the same origin as the API, leave `VITE_API_BASE_URL` empty; otherwise the UI calls `/api/api/dataset/latest` and shows the offline snapshot.
+- To deploy a specific frontend branch to a server:
+  ```bash
+  cd /var/www/aintivirus-survaillance-tracker/frontend/app
+  git fetch origin my-feature-branch
+  git checkout my-feature-branch
+  npm ci            # or npm install
+  npm run build
+  sudo cp -r dist/* /var/www/aintivirus-frontend/
+  sudo systemctl reload nginx
+  ```
+  Adjust directories/branch names for your setup; rebuild after every checkout before syncing `dist/` to your web root.
 
 ---
 
@@ -151,6 +162,24 @@ Keep secrets (Redis credentials, emails) in your secret manager and inject them 
 | Disk utilization | OS metrics on data/export volumes | Alert at 80% capacity |
 
 Logging aggregation (ELK, Loki, CloudWatch) is strongly recommended. Tag production logs with connector names for rapid triage.
+
+### Canceling ingest jobs
+
+Key commands when you need to stop a connector mid-flight. Run from any shell with permissions to reach Redis:
+
+- List active jobs and remove the one you care about (e.g., `overpass-alpr`):\
+  ```bash
+  node -e "(async()=>{const{Queue}=require('bullmq');const q=new Queue('ingest',{connection:{host:'127.0.0.1',port:6379}});const active=await q.getJobs(['active']);for(const job of active){console.log('active',job.id,job.data);if(job.data?.connectorId==='overpass-alpr'){await job.discard();await job.remove();console.log('force removed',job.id);}}await q.close();})()"
+  ```
+- For waiting/delayed jobs by connector id swap `'active'` for `['waiting','delayed']`.
+
+- Kill an *active* job: fill in the job id from the logs or `q.getActive()` (act fast before it completes):\
+  `node -e "(async()=>{const{Queue}=require('bullmq');const q=new Queue('ingest',{connection:{host:'127.0.0.1',port:6379}});const job=await q.getJob('collect:1731685200000');if(job){await job.discard();await job.remove();console.log('Force removed',job.id);}await q.close();})()"`
+
+- Pause the entire `ingest` queue to stop new jobs from starting:\
+  `node -e "(async()=>{const{Queue}=require('bullmq');const q=new Queue('ingest',{connection:{host:'127.0.0.1',port:6379}});await q.pause();console.log('Queue paused');await q.close();})()"`
+
+Remember to resume with `q.resume()` when you’re ready to process jobs again.
 
 ---
 
