@@ -60,7 +60,7 @@ const DEFAULT_ADDRESS_LABEL = 'ALPR surveillance node';
 export class OverpassConnector implements Connector {
   readonly metadata: ConnectorMetadata = {
     id: 'overpass-alpr',
-    title: 'OpenStreetMap ALPR Surveillance',
+    title: 'License Plate Reader Surveillance',
     description:
       'Imports OpenStreetMap nodes tagged as ALPR surveillance equipment via the Overpass API.',
     kind: 'api',
