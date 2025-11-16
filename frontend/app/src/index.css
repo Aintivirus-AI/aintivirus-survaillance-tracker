@@ -61,6 +61,11 @@ body::after {
     radial-gradient(circle at 70% 85%, rgba(14, 165, 233, 0.15), transparent 55%);
 }
 
+html {
+  width: 100%;
+  overflow-x: hidden;
+}
+
 a {
   color: #38bdf8;
   text-decoration: none;
@@ -1963,6 +1968,15 @@ button.refresh-button:hover {
 }
 
 @media (max-width: 720px) {
+  html,
+  body,
+  #root,
+  .app {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
   .app {
     padding: 6rem 1rem 3rem;
   }
@@ -2128,6 +2142,28 @@ button.refresh-button:hover {
 
   .record-card {
     width: 100%;
+  }
+
+  .record-card-featured-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+    width: 100%;
+  }
+
+  .record-card-featured-category {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .record-card-featured-meta {
+    width: 100%;
+  }
+
+  .record-card-row-inline {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
   }
 
   .records-footer {
