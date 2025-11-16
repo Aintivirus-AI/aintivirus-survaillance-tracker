@@ -1104,6 +1104,12 @@ button.refresh-button:hover {
     0 12px 28px rgba(15, 23, 42, 0.4);
 }
 
+.record-card-disabled {
+  cursor: default;
+  pointer-events: none;
+  opacity: 0.92;
+}
+
 .record-card-row {
   display: flex;
   flex-direction: column;
@@ -1171,6 +1177,14 @@ button.refresh-button:hover {
 
 .records-row-selected td {
   color: #f8fafc;
+}
+
+.records-row-disabled {
+  cursor: default;
+}
+
+.records-row-disabled:hover {
+  background-color: transparent;
 }
 
 .records-table thead {
@@ -1250,6 +1264,10 @@ button.refresh-button:hover {
   align-items: center;
   font-size: 0.8rem;
   color: #cbd5f5;
+}
+
+.source-mobile-highlight {
+  display: none;
 }
 
 .empty-state {
@@ -2163,6 +2181,120 @@ button.refresh-button:hover {
   .footer-social-link {
     width: 34px;
     height: 34px;
+  }
+
+  .source-card-priority {
+    border-color: rgba(59, 130, 246, 0.28);
+    background:
+      radial-gradient(circle at 12% 0%, rgba(59, 130, 246, 0.2), transparent 60%),
+      radial-gradient(circle at 90% 12%, rgba(14, 165, 233, 0.26), transparent 55%),
+      rgba(8, 13, 28, 0.92);
+    box-shadow:
+      0 0 36px rgba(37, 99, 235, 0.28),
+      0 24px 60px rgba(2, 8, 23, 0.7);
+  }
+
+  .source-mobile-highlight {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .source-mobile-highlight-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.85rem 1rem;
+    border-radius: 18px;
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    background: rgba(12, 18, 38, 0.9);
+    box-shadow:
+      inset 0 1px 0 rgba(148, 163, 184, 0.12),
+      0 12px 24px rgba(2, 8, 23, 0.55);
+  }
+
+  .source-mobile-highlight-label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(203, 213, 225, 0.9);
+  }
+
+  .source-mobile-highlight-card strong {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #f8fafc;
+  }
+
+  .source-mobile-highlight-caption {
+    font-size: 0.75rem;
+    color: rgba(191, 219, 254, 0.85);
+  }
+
+  .record-card-featured-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.85rem;
+  }
+
+  .record-card-featured-jurisdiction {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .record-card-featured-label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(148, 163, 184, 0.85);
+  }
+
+  .record-card-featured-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #f8fafc;
+  }
+
+  .record-card-featured-category .badge {
+    font-size: 0.7rem;
+  }
+
+  .record-card-featured-category {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .record-card-featured-detail {
+    margin-top: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .record-card-featured-value {
+    font-size: 0.92rem;
+    color: #e2e8f0;
+    line-height: 1.5;
+  }
+
+  .record-card-featured-meta {
+    margin-top: 0.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.6rem;
+  }
+
+  .record-card-featured-meta-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #bfdbfe;
+    background: rgba(59, 130, 246, 0.22);
   }
 }
 
