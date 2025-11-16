@@ -48,7 +48,10 @@ function getStatusClass(status: string): string {
 }
 
 const FRAME_SEGMENTS = [0, 1, 2];
-const PAGE_SIZE = 5;
+const DEFAULT_PAGE_SIZE = 5;
+const REDLIGHT_DESKTOP_PAGE_SIZE = 20;
+const DESKTOP_BREAKPOINT_PX = 1024;
+const DESKTOP_MEDIA_QUERY = `(min-width: ${DESKTOP_BREAKPOINT_PX}px)`;
 const REDLIGHT_SOURCE_KEY = 'redlightcameralist';
 const LICENSE_SOURCE_KEY = 'overpass-alpr';
 const ATLAS_SOURCE_KEY = 'atlas-of-surveillance';
@@ -58,6 +61,46 @@ const SCROLL_TARGETS = {
   redlight: `source-${REDLIGHT_SOURCE_KEY}`,
   license: `source-${LICENSE_SOURCE_KEY}`,
 } as const;
+
+function useMediaQuery(query: string): boolean {
+  const getMatches = () => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+    return window.matchMedia(query).matches;
+  };
+
+  const [matches, setMatches] = useState(getMatches);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia(query);
+    const handleChange = (event: MediaQueryListEvent) => {
+      setMatches(event.matches);
+    };
+
+    setMatches(mediaQuery.matches);
+
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', handleChange);
+    } else if (typeof mediaQuery.addListener === 'function') {
+      mediaQuery.addListener(handleChange);
+    }
+
+    return () => {
+      if (typeof mediaQuery.removeEventListener === 'function') {
+        mediaQuery.removeEventListener('change', handleChange);
+      } else if (typeof mediaQuery.removeListener === 'function') {
+        mediaQuery.removeListener(handleChange);
+      }
+    };
+  }, [query]);
+
+  return matches;
+}
 
 function UsFlagIcon(props: SVGProps<SVGSVGElement>) {
   return (
@@ -80,42 +123,6 @@ function UsFlagIcon(props: SVGProps<SVGSVGElement>) {
           <circle cx="11.5" cy="16.5" r="1.8" />
           <circle cx="17.5" cy="16.5" r="1.8" />
           <circle cx="23.5" cy="16.5" r="1.8" />
-        </g>
-      </svg>
-  );
-}
-
-function CanadaFlagIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-      <svg aria-hidden="true" viewBox="0 0 64 48" {...props}>
-        <rect fill="#ffffff" height="48" width="64" />
-        <rect fill="#d80621" height="48" width="12" />
-        <rect fill="#d80621" height="48" width="12" x="52" />
-        <path
-            d="M32 9.5 34 15h6l-4.8 3.5 1.6 9.3-4.8-3.5-4.8 3.5 1.6-9.3L26 15h6z"
-            fill="#d80621"
-        />
-      </svg>
-  );
-}
-
-function EuFlagIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-      <svg aria-hidden="true" viewBox="0 0 64 48" {...props}>
-        <rect fill="#003399" height="48" width="64" />
-        <g fill="#ffd700">
-          <circle cx="47" cy="24" r="2.1" />
-          <circle cx="45" cy="16.5" r="2.1" />
-          <circle cx="39.5" cy="11" r="2.1" />
-          <circle cx="32" cy="9" r="2.1" />
-          <circle cx="24.5" cy="11" r="2.1" />
-          <circle cx="19" cy="16.5" r="2.1" />
-          <circle cx="17" cy="24" r="2.1" />
-          <circle cx="19" cy="31.5" r="2.1" />
-          <circle cx="24.5" cy="37" r="2.1" />
-          <circle cx="32" cy="39" r="2.1" />
-          <circle cx="39.5" cy="37" r="2.1" />
-          <circle cx="45" cy="31.5" r="2.1" />
         </g>
       </svg>
   );
@@ -259,6 +266,11 @@ function SourceCard({
   const isAtlas = source.key === 'atlas-of-surveillance';
   const isPrioritySource = PRIORITY_SOURCE_KEYS.has(source.key);
   const allowSelection = !isAtlas;
+  const isDesktopViewport = useMediaQuery(DESKTOP_MEDIA_QUERY);
+  const pageSize =
+      source.key === REDLIGHT_SOURCE_KEY && isDesktopViewport
+          ? REDLIGHT_DESKTOP_PAGE_SIZE
+          : DEFAULT_PAGE_SIZE;
   const sourceCardClassNames = ['source-card'];
   if (isPrioritySource) {
     sourceCardClassNames.push('source-card-priority');
@@ -266,10 +278,9 @@ function SourceCard({
 
   const filteredRecords = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
-    if (!query) {
-      return source.records;
-    }
-    return source.records.filter((record) => {
+    const filtered = (!query
+        ? source.records
+        : source.records.filter((record) => {
       const fields = [record.jurisdiction, record.address, record.category];
       if (isOverpass) {
         const tags = getOverpassTags(record);
@@ -286,14 +297,29 @@ function SourceCard({
         }
       }
       return fields.some((field) => field?.toLowerCase().includes(query));
-    });
-  }, [isOverpass, searchTerm, source.records]);
+    }));
 
-  const totalPages = Math.max(1, Math.ceil(filteredRecords.length / PAGE_SIZE));
+    if (!isAtlas) {
+      return filtered;
+    }
+
+    return [...filtered].sort((a, b) => {
+      const categoryA = (a.category ?? '').toLowerCase();
+      const categoryB = (b.category ?? '').toLowerCase();
+      if (categoryA === categoryB) {
+        const jurisdictionA = (a.jurisdiction ?? '').toLowerCase();
+        const jurisdictionB = (b.jurisdiction ?? '').toLowerCase();
+        return jurisdictionA.localeCompare(jurisdictionB);
+      }
+      return categoryB.localeCompare(categoryA);
+    });
+  }, [isAtlas, isOverpass, searchTerm, source.records]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredRecords.length / pageSize));
 
   useEffect(() => {
     setPage(1);
-  }, [searchTerm, source.key]);
+  }, [searchTerm, source.key, pageSize]);
 
   useEffect(() => {
     setPage((prev) => Math.min(prev, totalPages));
@@ -301,9 +327,9 @@ function SourceCard({
 
   const currentPage = Math.min(page, totalPages);
   const pagedRecords = useMemo(() => {
-    const start = (currentPage - 1) * PAGE_SIZE;
-    return filteredRecords.slice(start, start + PAGE_SIZE);
-  }, [filteredRecords, currentPage]);
+    const start = (currentPage - 1) * pageSize;
+    return filteredRecords.slice(start, start + pageSize);
+  }, [filteredRecords, currentPage, pageSize]);
 
   const locationColumnLabel =
       source.key === 'atlas-of-surveillance'
@@ -316,7 +342,7 @@ function SourceCard({
       source.key === 'redlightcameralist' ? undefined : source.homepage;
 
   const hasMatches = filteredRecords.length > 0;
-  const rangeStart = hasMatches ? (currentPage - 1) * PAGE_SIZE + 1 : 0;
+  const rangeStart = hasMatches ? (currentPage - 1) * pageSize + 1 : 0;
   const rangeEnd = hasMatches ? rangeStart + pagedRecords.length - 1 : 0;
   const isFiltered = searchTerm.trim().length > 0;
   const highlightCards = useMemo(() => {
@@ -655,15 +681,6 @@ function RegionSelector() {
           <span className="region-label">US</span>
         </div>
 
-        <div aria-disabled="true" className="region-pill region-pill-disabled">
-          <CanadaFlagIcon className="region-flag" />
-          <span className="region-label">CA</span>
-        </div>
-
-        <div aria-disabled="true" className="region-pill region-pill-disabled">
-          <EuFlagIcon className="region-flag" />
-          <span className="region-label">EU</span>
-        </div>
       </div>
   );
 }
@@ -783,7 +800,7 @@ function App() {
               <div className="brand-block">
                 <EyeOfProvidence className="brand-logo" />
                 <div className="brand-copy">
-                  <h1 className="brand">Aintivirus Survaillance Tracker</h1>
+                  <h1 className="brand">Aintivirus Surveillance Tracker</h1>
                   <p>
                     Live situational awareness across license plate readers, red-light
                     cams, and municipal surveillance programs.

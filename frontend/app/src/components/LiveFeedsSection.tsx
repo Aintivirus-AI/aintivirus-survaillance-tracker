@@ -32,8 +32,8 @@ const FEED_GROUPS: LiveFeedGroup[] = [
         key: 'flight-tracker',
         title: 'Flightradar24 Focus View',
         description:
-          'Zoomed view centered on the Southern Hemisphere. Explore aircraft telemetry, routes, and identifiers.',
-        href: 'https://www.flightradar24.com/-32.75,-62.10/8',
+          'Zoomed view centered over the U.S. Mountain West. Explore aircraft telemetry, routes, and identifiers.',
+        href: 'https://www.flightradar24.com/39.74,-104.42/6',
         linkLabel: 'Open full Flightradar24 map',
         fallbackMessage:
           'Flightradar24 restricts embedding on external sites. Launch the full air traffic viewer in a new tab.',

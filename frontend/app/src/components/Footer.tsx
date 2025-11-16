@@ -58,6 +58,12 @@ const socialLinks = [
 
 const Footer = () => {
   const navItems = siteConfig.navItems as NavItem[];
+  const columnItems = navItems.filter(
+    (item) => Array.isArray(item.children) && item.children.length > 0,
+  );
+  const standaloneLinks = navItems.filter(
+    (item) => !item.children || item.children.length === 0,
+  );
 
   return (
     <footer className="footer">
@@ -77,38 +83,51 @@ const Footer = () => {
         </div>
 
         <div className="footer-links">
-          {navItems.map((item) => {
-            const hasChildren = Array.isArray(item.children) && item.children.length > 0;
+          {columnItems.map((item) => (
+            <div className="footer-column" key={item.name}>
+              <a
+                className="footer-heading"
+                href={item.href}
+                rel={item.target === '_blank' ? 'noreferrer' : undefined}
+                target={item.target}
+              >
+                {item.name}
+              </a>
 
-            return (
-              <div className="footer-column" key={item.name}>
-                <a
-                  className="footer-heading"
-                  href={item.href}
-                  rel={item.target === '_blank' ? 'noreferrer' : undefined}
-                  target={item.target}
-                >
-                  {item.name}
-                </a>
+              <ul className="footer-submenu">
+                {item.children!.map((child) => (
+                  <li key={child.name}>
+                    <a
+                      href={child.href}
+                      rel={child.target === '_blank' ? 'noreferrer' : undefined}
+                      target={child.target}
+                    >
+                      {child.name}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
 
-                {hasChildren ? (
-                  <ul className="footer-submenu">
-                    {item.children!.map((child) => (
-                      <li key={child.name}>
-                        <a
-                          href={child.href}
-                          rel={child.target === '_blank' ? 'noreferrer' : undefined}
-                          target={child.target}
-                        >
-                          {child.name}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-              </div>
-            );
-          })}
+          {standaloneLinks.length > 0 ? (
+            <div className="footer-column" key="quick-links">
+              <span className="footer-heading">Quick Links</span>
+              <ul className="footer-submenu">
+                {standaloneLinks.map((link) => (
+                  <li key={link.name}>
+                    <a
+                      href={link.href}
+                      rel={link.target === '_blank' ? 'noreferrer' : undefined}
+                      target={link.target}
+                    >
+                      {link.name}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
         </div>
       </div>
 
