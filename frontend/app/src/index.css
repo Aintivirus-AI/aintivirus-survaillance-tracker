@@ -61,6 +61,11 @@ body::after {
     radial-gradient(circle at 70% 85%, rgba(14, 165, 233, 0.15), transparent 55%);
 }
 
+html {
+  width: 100%;
+  overflow-x: hidden;
+}
+
 a {
   color: #38bdf8;
   text-decoration: none;
@@ -1135,6 +1140,11 @@ button.refresh-button:hover {
   line-height: 1.45;
 }
 
+.record-card-value-rich {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .record-card-value-rich .overpass-details {
   gap: 0.35rem;
 }
@@ -1181,6 +1191,7 @@ button.refresh-button:hover {
 
 .records-row-disabled {
   cursor: default;
+  pointer-events: none;
 }
 
 .records-row-disabled:hover {
@@ -1216,10 +1227,17 @@ button.refresh-button:hover {
   min-width: 0;
 }
 
+.col-location-cell .cell-value {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .overpass-details {
   display: grid;
   gap: 0.35rem;
   color: #cbd5f5;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .overpass-details-primary {
@@ -1950,6 +1968,15 @@ button.refresh-button:hover {
 }
 
 @media (max-width: 720px) {
+  html,
+  body,
+  #root,
+  .app {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
   .app {
     padding: 6rem 1rem 3rem;
   }
@@ -2081,6 +2108,8 @@ button.refresh-button:hover {
 
   .source-card {
     padding: 1.45rem 1.3rem;
+    background: rgba(12, 20, 38, 0.88);
+    border: 1px solid rgba(59, 130, 246, 0.14);
   }
 
   .source-header {
@@ -2106,6 +2135,30 @@ button.refresh-button:hover {
   .records-list {
     display: grid;
     gap: 0.9rem;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: stretch;
+    width: 100%;
+  }
+
+  .record-card {
+    width: 100%;
+  }
+
+  .record-card-featured-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+    width: 100%;
+  }
+
+  .record-card-featured-meta {
+    width: 100%;
+  }
+
+  .record-card-row-inline {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
   }
 
   .records-footer {
@@ -2185,10 +2238,7 @@ button.refresh-button:hover {
 
   .source-card-priority {
     border-color: rgba(59, 130, 246, 0.28);
-    background:
-      radial-gradient(circle at 12% 0%, rgba(59, 130, 246, 0.2), transparent 60%),
-      radial-gradient(circle at 90% 12%, rgba(14, 165, 233, 0.26), transparent 55%),
-      rgba(8, 13, 28, 0.92);
+    background: rgba(8, 13, 28, 0.92);
     box-shadow:
       0 0 36px rgba(37, 99, 235, 0.28),
       0 24px 60px rgba(2, 8, 23, 0.7);
@@ -2255,15 +2305,8 @@ button.refresh-button:hover {
     font-size: 1.05rem;
     font-weight: 600;
     color: #f8fafc;
-  }
-
-  .record-card-featured-category .badge {
-    font-size: 0.7rem;
-  }
-
-  .record-card-featured-category {
-    display: flex;
-    justify-content: flex-end;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .record-card-featured-detail {
@@ -2277,6 +2320,8 @@ button.refresh-button:hover {
     font-size: 0.92rem;
     color: #e2e8f0;
     line-height: 1.5;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .record-card-featured-meta {

@@ -19,6 +19,9 @@ const mapPinIcon = L.icon({
   popupAnchor: [0, -42],
 });
 
+const REDLIGHT_SECTION_ID = 'source-redlightcameralist';
+const ALPR_SECTION_ID = 'source-overpass-alpr';
+
 function MapViewUpdater({ position }: { position: LatLngExpression }) {
   const map = useMap();
 
@@ -105,7 +108,9 @@ const InteractiveMap = forwardRef<HTMLElement, InteractiveMapProps>(
             </span>
           ) : (
             <span className="map-panel-subtitle">
-              Choose any row to highlight it on the map.
+              Select a row from the{' '}
+              <a href={`#${REDLIGHT_SECTION_ID}`}>Red Light Camera list</a> or{' '}
+              <a href={`#${ALPR_SECTION_ID}`}>ALPR list</a> to highlight it on the map.
             </span>
           )}
         </header>
