@@ -603,16 +603,13 @@ function SourceCard({
                   aria-disabled={!allowSelection || undefined}
                 >
                   {isPrioritySource ? (
-                    <>
-                      <div className="record-card-featured-header">
-                        <div className="record-card-featured-jurisdiction">
-                          <span className="record-card-featured-label">Jurisdiction</span>
-                          <span className="record-card-featured-title">{record.jurisdiction ?? '—'}</span>
-                        </div>
-                        <div className="record-card-featured-category">
-                          <span className={categoryClassName}>{categoryLabel}</span>
-                        </div>
-                      </div>
+          <>
+            <div className="record-card-featured-header">
+              <div className="record-card-featured-jurisdiction">
+                <span className="record-card-featured-label">Jurisdiction</span>
+                <span className="record-card-featured-title">{record.jurisdiction ?? '—'}</span>
+              </div>
+            </div>
                       <div className="record-card-featured-detail">
                         <span className="record-card-featured-label">{locationColumnLabel}</span>
                         <div className="record-card-featured-value record-card-value-rich">{cardLocationContent}</div>
@@ -626,6 +623,12 @@ function SourceCard({
                           ))}
                         </div>
                       ) : null}
+            <div className="record-card-row record-card-row-inline">
+              <span className="record-card-label">Category</span>
+              <span className="record-card-value">
+                <span className={categoryClassName}>{categoryLabel}</span>
+              </span>
+            </div>
                     </>
                   ) : (
                     <>

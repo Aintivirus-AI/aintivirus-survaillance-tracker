@@ -2151,11 +2151,6 @@ button.refresh-button:hover {
     width: 100%;
   }
 
-  .record-card-featured-category {
-    width: 100%;
-    justify-content: flex-start;
-  }
-
   .record-card-featured-meta {
     width: 100%;
   }
@@ -2312,15 +2307,6 @@ button.refresh-button:hover {
     color: #f8fafc;
     overflow-wrap: anywhere;
     word-break: break-word;
-  }
-
-  .record-card-featured-category .badge {
-    font-size: 0.7rem;
-  }
-
-  .record-card-featured-category {
-    display: flex;
-    justify-content: flex-end;
   }
 
   .record-card-featured-detail {
