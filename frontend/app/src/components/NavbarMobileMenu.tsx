@@ -37,6 +37,10 @@ const MobileMenu = ({ isOpen, onClose, pathname }: MobileMenuProps) => {
     }
   }, [isOpen]);
 
+  const toggleSubmenu = (itemName: string) => {
+    setOpenSubmenu(openSubmenu === itemName ? null : itemName);
+  };
+
   return (
     <div className={classNames('nav-mobile', isOpen && 'nav-mobile-open')}>
       <div className="nav-mobile-backdrop" onClick={onClose} />
@@ -57,39 +61,55 @@ const MobileMenu = ({ isOpen, onClose, pathname }: MobileMenuProps) => {
                 const isOpenSubmenu = openSubmenu === item.name;
                 return (
                   <li className="nav-mobile-item" key={item.name}>
-                    <button
-                      className={classNames(
-                        'nav-mobile-button',
-                        (isParentActive || isChildActive) && 'nav-mobile-button-active',
-                      )}
-                      onClick={() =>
-                        setOpenSubmenu(isOpenSubmenu ? null : item.name)
-                      }
-                      type="button"
-                    >
-                      <span>{item.name}</span>
-                      <ArrowDownIcon />
-                    </button>
+                    <div className="nav-mobile-item-header">
+                      <a
+                        className={classNames(
+                          'nav-mobile-link',
+                          (isParentActive || isChildActive) && 'nav-mobile-link-active',
+                        )}
+                        href={item.href}
+                        onClick={onClose}
+                        rel={item.target === '_blank' ? 'noreferrer' : undefined}
+                        target={item.target}
+                      >
+                        {item.name}
+                      </a>
+                      <button
+                        className={classNames(
+                          'nav-mobile-toggle',
+                          isOpenSubmenu && 'nav-mobile-toggle-open',
+                        )}
+                        onClick={() => toggleSubmenu(item.name)}
+                        type="button"
+                        aria-label={`Toggle ${item.name} submenu`}
+                      >
+                        <ArrowDownIcon />
+                      </button>
+                    </div>
                     <ul
                       className={classNames(
                         'nav-mobile-submenu',
                         isOpenSubmenu && 'nav-mobile-submenu-open',
                       )}
                     >
-                      {item.children!.map((child) => {
+                      {item.children!.map((child, childIdx) => {
                         const childActive = pathname.includes(child.href);
                         return (
-                          <li className="nav-mobile-subitem" key={child.name}>
+                          <li
+                            className="nav-mobile-subitem"
+                            key={child.name}
+                            style={{
+                              transitionDelay: isOpenSubmenu ? `${childIdx * 50}ms` : '0ms',
+                            }}
+                          >
                             <a
                               className={classNames(
-                                'nav-mobile-link',
-                                childActive && 'nav-mobile-link-active',
+                                'nav-mobile-sublink',
+                                childActive && 'nav-mobile-sublink-active',
                               )}
                               href={child.href}
                               onClick={onClose}
-                              rel={
-                                child.target === '_blank' ? 'noreferrer' : undefined
-                              }
+                              rel={child.target === '_blank' ? 'noreferrer' : undefined}
                               target={child.target}
                             >
                               {child.name}
@@ -138,5 +158,3 @@ const MobileMenu = ({ isOpen, onClose, pathname }: MobileMenuProps) => {
 };
 
 export default MobileMenu;
-
-
