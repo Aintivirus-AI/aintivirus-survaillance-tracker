@@ -59,21 +59,35 @@ const MobileMenu = ({ isOpen, onClose, pathname }: MobileMenuProps) => {
 
               if (hasChildren) {
                 const isOpenSubmenu = openSubmenu === item.name;
+                const isToolsItem = item.name === 'Tools';
                 return (
                   <li className="nav-mobile-item" key={item.name}>
                     <div className="nav-mobile-item-header">
-                      <a
-                        className={classNames(
-                          'nav-mobile-link',
-                          (isParentActive || isChildActive) && 'nav-mobile-link-active',
-                        )}
-                        href={item.href}
-                        onClick={onClose}
-                        rel={item.target === '_blank' ? 'noreferrer' : undefined}
-                        target={item.target}
-                      >
-                        {item.name}
-                      </a>
+                      {isToolsItem ? (
+                        <span
+                          className={classNames(
+                            'nav-mobile-link',
+                            (isParentActive || isChildActive) && 'nav-mobile-link-active',
+                          )}
+                          onClick={() => toggleSubmenu(item.name)}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          {item.name}
+                        </span>
+                      ) : (
+                        <a
+                          className={classNames(
+                            'nav-mobile-link',
+                            (isParentActive || isChildActive) && 'nav-mobile-link-active',
+                          )}
+                          href={item.href}
+                          onClick={onClose}
+                          rel={item.target === '_blank' ? 'noreferrer' : undefined}
+                          target={item.target}
+                        >
+                          {item.name}
+                        </a>
+                      )}
                       <button
                         className={classNames(
                           'nav-mobile-toggle',

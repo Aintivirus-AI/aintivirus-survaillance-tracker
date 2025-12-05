@@ -194,20 +194,32 @@ const Navbar = () => {
                 : false;
 
               if (hasChildren) {
+                const isToolsItem = item.name === 'Tools';
                 return (
                   <div className="nav-item nav-item-parent" key={item.name}>
                     <div className="nav-link-wrapper">
-                      <a
-                        href={item.href}
-                        target={item.target}
-                        rel={item.target === '_blank' ? 'noreferrer' : undefined}
-                        className={classNames(
-                          'nav-link',
-                          (isParentActive || isChildActive) && 'nav-link-active',
-                        )}
-                      >
-                        {item.name}
-                      </a>
+                      {isToolsItem ? (
+                        <span
+                          className={classNames(
+                            'nav-link',
+                            (isParentActive || isChildActive) && 'nav-link-active',
+                          )}
+                        >
+                          {item.name}
+                        </span>
+                      ) : (
+                        <a
+                          href={item.href}
+                          target={item.target}
+                          rel={item.target === '_blank' ? 'noreferrer' : undefined}
+                          className={classNames(
+                            'nav-link',
+                            (isParentActive || isChildActive) && 'nav-link-active',
+                          )}
+                        >
+                          {item.name}
+                        </a>
+                      )}
                       <ArrowDownIcon />
                     </div>
                     <div className="nav-dropdown">
