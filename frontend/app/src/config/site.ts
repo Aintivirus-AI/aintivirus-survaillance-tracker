@@ -64,6 +64,14 @@ export const siteConfig: SiteConfig = {
         { name: 'AINTI DAO', href: 'https://v2.realms.today/dao/BFrzycbMGUuNdFiHRAEgiLzhKwrtFLSd2dfquWURC6Nz', target: '_blank' },
       ],
     },
+    { name: 'Dashboard', href: 'https://aintivirus.ai/dashboard', target: '_blank' },
+  ],
+  footerItems: [
+    { name: 'Cross Chain Mixer', href: 'https://mix.aintivirus.ai', target: '_blank' },
+    { name: 'Bridge', href: 'https://bridge.aintivirus.ai/', target: '_blank' },
+    { name: 'Gift Card / E Sim', href: 'https://aintivirus.ai/giftcard', target: '_blank' },
+    { name: 'Merch', href: 'https://aintivirus.ai/merch', target: '_blank' },
+    { name: 'Media', href: 'https://aintivirus.ai/media', target: '_blank' },
   ],
   footerItems: [
     { name: 'Cross Chain Mixer', href: 'https://mix.aintivirus.ai', target: '_blank' },

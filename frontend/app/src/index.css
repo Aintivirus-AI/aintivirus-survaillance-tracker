@@ -226,6 +226,12 @@ a:hover {
   gap: 0.25rem;
 }
 
+.nav-link-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
 .nav-link {
   display: inline-flex;
   align-items: center;
@@ -259,6 +265,17 @@ a:hover {
   width: 16px;
   height: 16px;
   color: #ffffff;
+  transition: transform 0.3s ease;
+}
+
+.nav-item-parent:hover .nav-arrow {
+  transform: rotate(180deg);
+}
+
+.nav-arrow {
+  width: 16px;
+  height: 16px;
+  color: rgba(255, 255, 255, 0.7);
   transition: transform 0.3s ease;
 }
 
@@ -468,6 +485,14 @@ a:hover {
 .nav-mobile-toggle:hover {
   color: #ffffff;
   opacity: 0.9;
+}
+
+.nav-mobile-toggle .nav-icon {
+  transition: transform 0.3s ease;
+}
+
+.nav-mobile-toggle-open .nav-icon {
+  transform: rotate(180deg);
 }
 
 .nav-mobile-toggle .nav-icon {
