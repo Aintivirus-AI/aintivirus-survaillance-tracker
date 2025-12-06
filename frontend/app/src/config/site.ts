@@ -57,12 +57,13 @@ export const siteConfig: SiteConfig = {
       href: 'https://aintivirus.ai/tools',
       target: '_blank',
       children: [
+        { name: 'AINTI Dashboard', href: 'https://aintivirus.ai/dashboard', target: '_blank' },
+        { name: 'Surveillance Tracker', href: 'https://tracker.aintivirus.ai/', target: '_blank' },
         { name: 'Metadata Cleaner', href: 'https://aintivirus.ai/exifkiller', target: '_blank' },
         { name: 'McAfee Dex', href: 'https://dex.aintivirus.ai', target: '_blank' },
         { name: 'AINTI DAO', href: 'https://v2.realms.today/dao/BFrzycbMGUuNdFiHRAEgiLzhKwrtFLSd2dfquWURC6Nz', target: '_blank' },
       ],
     },
-    { name: 'Dashboard', href: 'https://aintivirus.ai/dashboard', target: '_blank' },
   ],
   footerItems: [
     { name: 'Cross Chain Mixer', href: 'https://mix.aintivirus.ai', target: '_blank' },
