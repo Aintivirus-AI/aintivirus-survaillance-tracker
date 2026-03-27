@@ -2421,6 +2421,89 @@ button.refresh-button:hover {
   color: var(--gti-dim);
 }
 
+/* Extension CTA card */
+.gti-card--cta {
+  border-color: rgba(74, 222, 128, 0.2);
+  background: linear-gradient(
+    168deg,
+    rgba(12, 20, 38, 0.95) 0%,
+    rgba(16, 32, 48, 0.92) 100%
+  );
+}
+
+.gti-badge--shield {
+  background: rgba(74, 222, 128, 0.12);
+  color: var(--gti-safe);
+  border: 1px solid rgba(74, 222, 128, 0.25);
+}
+
+.gti-cta-desc {
+  margin: 0;
+  font-size: 0.88rem;
+  color: rgba(203, 213, 225, 0.8);
+  line-height: 1.6;
+}
+
+.gti-cta-desc em {
+  color: var(--gti-critical);
+  font-style: normal;
+  font-weight: 600;
+}
+
+.gti-cta-features {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.gti-cta-feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-size: 0.82rem;
+  color: rgba(226, 232, 240, 0.75);
+  line-height: 1.45;
+}
+
+.gti-cta-feature svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.gti-cta-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.85rem 1.5rem;
+  border-radius: 14px;
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  background: rgba(74, 222, 128, 0.1);
+  color: var(--gti-safe);
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.gti-cta-button:hover {
+  background: rgba(74, 222, 128, 0.18);
+  border-color: rgba(74, 222, 128, 0.5);
+  box-shadow: 0 4px 20px rgba(74, 222, 128, 0.12);
+}
+
+.gti-cta-note {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--gti-dim);
+  text-align: center;
+  font-family: monospace;
+}
+
 /* Mobile overrides */
 @media (max-width: 720px) {
   .gti-section {
