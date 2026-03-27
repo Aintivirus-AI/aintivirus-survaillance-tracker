@@ -73,13 +73,6 @@ export const siteConfig: SiteConfig = {
     { name: 'Merch', href: 'https://aintivirus.ai/merch', target: '_blank' },
     { name: 'Media', href: 'https://aintivirus.ai/media', target: '_blank' },
   ],
-  footerItems: [
-    { name: 'Cross Chain Mixer', href: 'https://mix.aintivirus.ai', target: '_blank' },
-    { name: 'Bridge', href: 'https://bridge.aintivirus.ai/', target: '_blank' },
-    { name: 'Gift Card / E Sim', href: 'https://aintivirus.ai/giftcard', target: '_blank' },
-    { name: 'Merch', href: 'https://aintivirus.ai/merch', target: '_blank' },
-    { name: 'Media', href: 'https://aintivirus.ai/media', target: '_blank' },
-  ],
   buyLink:
     'https://raydium.io/swap/?inputMint=BAezfVmia8UYLt4rst6PCU4dvL2i2qHzqn4wGhytpNJW&outputMint=sol',
 };
