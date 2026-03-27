@@ -2423,6 +2423,7 @@ button.refresh-button:hover {
 
 /* Extension CTA card */
 .gti-card--cta {
+  grid-column: 1 / -1;
   border-color: rgba(74, 222, 128, 0.2);
   background: linear-gradient(
     168deg,
@@ -2451,9 +2452,9 @@ button.refresh-button:hover {
 }
 
 .gti-cta-features {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.6rem 1.5rem;
 }
 
 .gti-cta-feature {
@@ -2532,6 +2533,10 @@ button.refresh-button:hover {
 
   .gti-scores {
     gap: 1.5rem;
+  }
+
+  .gti-cta-features {
+    grid-template-columns: 1fr;
   }
 }
 
