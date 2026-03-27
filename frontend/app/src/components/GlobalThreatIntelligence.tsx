@@ -459,10 +459,12 @@ function GlobalThreatIntelligence() {
       <div className="gti-grid">
         <GlobalThreatOverview />
         <CountryIntelligence />
+      </div>
+      <LiveThreatFeed />
+      <div className="gti-grid">
         <ExposureAssessment />
         <ExtensionCTA />
       </div>
-      <LiveThreatFeed />
     </section>
   );
 }
