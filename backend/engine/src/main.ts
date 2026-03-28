@@ -5,12 +5,32 @@ import { AppModule } from './app.module';
 
 const logger = new Logger('Bootstrap');
 
+function validateCorsOrigins(raw: string[]): string[] {
+  const isDev = process.env.NODE_ENV === 'development';
+  return raw.filter((origin) => {
+    try {
+      const url = new URL(origin);
+      if (!isDev && url.protocol !== 'https:') {
+        logger.warn(
+          `Rejecting non-HTTPS CORS origin in non-development environment: ${origin}`,
+        );
+        return false;
+      }
+      return true;
+    } catch {
+      logger.warn(`Rejecting malformed CORS origin: ${origin}`);
+      return false;
+    }
+  });
+}
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
-  const corsOrigins = configService.get<string[]>('cors.origins') ?? [
+  const rawOrigins = configService.get<string[]>('cors.origins') ?? [
     'http://localhost:5173',
   ];
+  const corsOrigins = validateCorsOrigins(rawOrigins);
 
   app.enableCors({
     origin: corsOrigins,

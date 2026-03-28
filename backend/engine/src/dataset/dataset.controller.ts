@@ -1,4 +1,10 @@
-import { Controller, Get, NotFoundException, Param } from '@nestjs/common';
+import {
+  BadRequestException,
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+} from '@nestjs/common';
 import { DatasetService } from './dataset.service';
 import { ExportService } from './export.service';
 import { SourceService } from '../sources/source.service';
@@ -44,6 +50,9 @@ export class DatasetController {
 
   @Get('sources/:key')
   async getSourceDataset(@Param('key') key: string) {
+    if (!/^[a-z0-9_-]+$/i.test(key) || key.length > 64) {
+      throw new BadRequestException(`Invalid source key`);
+    }
     const dataset = await this.datasetService.buildSourceDataset(key);
     if (!dataset) {
       throw new NotFoundException(`Source "${key}" not found`);

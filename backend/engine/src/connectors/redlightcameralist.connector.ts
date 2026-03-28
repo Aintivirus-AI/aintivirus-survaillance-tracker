@@ -17,8 +17,14 @@ const REDLIGHT_BASE_URL = `https://${REDLIGHT_HOST}`;
 const REDLIGHT_ROOT_PATH = '/poi/United-States-of-America/';
 const REDLIGHT_ROBOTS_PATH = '/robots.txt';
 const DEFAULT_REQUEST_DELAY_MS = 200;
-const MAX_DISCOVERY_DEPTH = 2;
-const MAX_DISCOVERY_PAGES = 400;
+const MAX_DISCOVERY_DEPTH = parseInt(
+  process.env.REDLIGHT_MAX_DISCOVERY_DEPTH ?? '2',
+  10,
+);
+const MAX_DISCOVERY_PAGES = parseInt(
+  process.env.REDLIGHT_MAX_DISCOVERY_PAGES ?? '400',
+  10,
+);
 const MAX_CITY_PAGE_REQUESTS = 25;
 const DEFAULT_USER_AGENT =
   'SurveillanceTrackerBot/1.0 (+https://github.com/chand/aintivirus-survaillance-tracker)';
@@ -440,6 +446,9 @@ export class RedlightCameraListConnector implements Connector {
 
     try {
       const resolved = new URL(trimmed, baseUrl);
+      if (resolved.protocol !== 'https:' && resolved.protocol !== 'http:') {
+        return null;
+      }
       if (resolved.hostname !== REDLIGHT_HOST) {
         return null;
       }
@@ -613,8 +622,17 @@ export class RedlightCameraListConnector implements Connector {
   }
 
   private compileRobotsRule(rule: string): RegExp {
-    const endsWithDollar = rule.endsWith('$');
-    const baseRule = endsWithDollar ? rule.slice(0, -1) : rule;
+    const MAX_RULE_LENGTH = 500;
+    const MAX_WILDCARDS = 10;
+
+    const truncated = rule.slice(0, MAX_RULE_LENGTH);
+    const wildcardCount = (truncated.match(/\*/g) ?? []).length;
+    if (wildcardCount > MAX_WILDCARDS) {
+      return /(?!)/;
+    }
+
+    const endsWithDollar = truncated.endsWith('$');
+    const baseRule = endsWithDollar ? truncated.slice(0, -1) : truncated;
     const escaped = baseRule
       .split('*')
       .map((segment) => this.escapeRegex(segment))

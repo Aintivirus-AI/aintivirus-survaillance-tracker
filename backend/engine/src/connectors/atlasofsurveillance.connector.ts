@@ -55,6 +55,17 @@ export class AtlasOfSurveillanceConnector implements Connector {
       const response = await this.http.get<string>(DEFAULT_ATLAS_URL, {
         responseType: 'text',
       });
+      const contentType =
+        (response.headers['content-type'] as string | undefined) ?? '';
+      if (
+        !contentType.startsWith('text/csv') &&
+        !contentType.startsWith('text/plain') &&
+        !contentType.startsWith('application/octet-stream')
+      ) {
+        throw new Error(
+          `Unexpected Content-Type from Atlas of Surveillance: ${contentType}`,
+        );
+      }
       const csvBody = response.data ?? '';
       const records = this.parseCsv(csvBody);
 
@@ -270,7 +281,11 @@ export class AtlasOfSurveillanceConnector implements Connector {
       for (const candidate of candidates) {
         if (existsSync(candidate)) {
           const raw = readFileSync(candidate, 'utf-8');
-          return JSON.parse(raw) as AtlasSampleEntry[];
+          const parsed: unknown = JSON.parse(raw);
+          if (!Array.isArray(parsed)) {
+            throw new Error('Sample data must be a JSON array');
+          }
+          return parsed as AtlasSampleEntry[];
         }
       }
 

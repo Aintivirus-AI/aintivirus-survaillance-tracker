@@ -18,7 +18,16 @@ export default () => {
         userAgent:
           process.env.NOMINATIM_USER_AGENT ??
           'aintivirus-surveillance-tracker/1.0',
-        email: process.env.NOMINATIM_EMAIL ?? 'john@mcafee.com',
+        email: (() => {
+          const email = process.env.NOMINATIM_EMAIL;
+          if (!email) {
+            throw new Error(
+              'NOMINATIM_EMAIL environment variable is required. ' +
+                'Set it to an email address that identifies your application to the Nominatim API.',
+            );
+          }
+          return email;
+        })(),
         timeoutMs: parseInt(process.env.NOMINATIM_TIMEOUT_MS ?? '10000', 10),
         rateLimitMs: parseInt(
           process.env.NOMINATIM_RATE_LIMIT_MS ?? '1100',
