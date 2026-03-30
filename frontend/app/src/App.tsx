@@ -6,7 +6,6 @@ import Footer from './components/Footer';
 import InteractiveMap from './components/InteractiveMap';
 import Navbar from './components/Navbar';
 import ThreatMapEmbed from './components/ThreatMapEmbed';
-import LiveFeedsSection from './components/LiveFeedsSection';
 import GlobalThreatIntelligence from './components/GlobalThreatIntelligence';
 import type { DatasetRecord, DatasetSource } from './types';
 
@@ -904,7 +903,6 @@ function App() {
 
             <ThreatMapEmbed />
             <GlobalThreatIntelligence />
-            <LiveFeedsSection />
           </main>
 
           <FrameStrip />
