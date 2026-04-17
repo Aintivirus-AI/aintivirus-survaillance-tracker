@@ -1,272 +1,249 @@
-import { useEffect, useMemo, useState } from 'react';
-
-/* ------------------------------------------------------------------ */
-/*  TYPES                                                              */
-/* ------------------------------------------------------------------ */
-
-type ThreatFeedItem = {
-  type: 'CRITICAL' | 'HIGH' | 'MEDIUM';
-  source: string;
-  message: string;
-  region: string;
-};
-
-type CountryRisk = {
-  cyberThreat: number;
-  privacyScore: number;
-  surveillanceLevel: string;
-  censorship: string;
-  dataRetention: string;
-  fiveEyes: boolean;
-  knownAPTs: string[];
-  recentIncidents: string[];
-};
-
-/* ------------------------------------------------------------------ */
-/*  DATA                                                               */
-/* ------------------------------------------------------------------ */
-
-const COUNTRY_RISK_DB: Record<string, CountryRisk> = {
-  'United States': {
-    cyberThreat: 65, privacyScore: 45, surveillanceLevel: 'High',
-    censorship: 'Low', dataRetention: 'Voluntary', fiveEyes: true,
-    knownAPTs: ['Equation Group', 'Longhorn', 'Lamberts'],
-    recentIncidents: ['SolarWinds breach aftermath', 'MOVEit exploitation wave', 'Healthcare sector targeting'],
-  },
-  'United Kingdom': {
-    cyberThreat: 60, privacyScore: 50, surveillanceLevel: 'High',
-    censorship: 'Low', dataRetention: 'Mandatory', fiveEyes: true,
-    knownAPTs: ['GCHQ ops', 'Turla variants'],
-    recentIncidents: ['Royal Mail ransomware', 'NHS supply chain attack', 'Electoral Commission breach'],
-  },
-  'China': {
-    cyberThreat: 90, privacyScore: 15, surveillanceLevel: 'Extreme',
-    censorship: 'Extreme', dataRetention: 'Mandatory + Monitoring', fiveEyes: false,
-    knownAPTs: ['APT41', 'APT10', 'Hafnium', 'Volt Typhoon', 'Salt Typhoon'],
-    recentIncidents: ['Telecom infrastructure compromise', 'Zero-day exploitation campaigns', 'AI-enabled phishing'],
-  },
-  'Russia': {
-    cyberThreat: 85, privacyScore: 20, surveillanceLevel: 'Very High',
-    censorship: 'High', dataRetention: 'Mandatory + SORM', fiveEyes: false,
-    knownAPTs: ['APT28/Fancy Bear', 'APT29/Cozy Bear', 'Sandworm', 'Turla'],
-    recentIncidents: ['Critical infrastructure attacks', 'Wiper malware campaigns', 'Election interference ops'],
-  },
-  'Germany': {
-    cyberThreat: 45, privacyScore: 75, surveillanceLevel: 'Moderate',
-    censorship: 'Low', dataRetention: 'Limited (GDPR)', fiveEyes: false,
-    knownAPTs: [],
-    recentIncidents: ['Ransomware on hospital systems', 'Supply chain attacks on auto industry'],
-  },
-  'India': {
-    cyberThreat: 55, privacyScore: 35, surveillanceLevel: 'High',
-    censorship: 'Moderate', dataRetention: 'Mandatory', fiveEyes: false,
-    knownAPTs: ['SideWinder', 'Patchwork'],
-    recentIncidents: ['AIIMS hospital breach', 'Banking trojan campaigns', 'Telecom data leaks'],
-  },
-  'Japan': {
-    cyberThreat: 50, privacyScore: 60, surveillanceLevel: 'Moderate',
-    censorship: 'Low', dataRetention: 'Limited', fiveEyes: false,
-    knownAPTs: [],
-    recentIncidents: ['Port system disruption', 'Defense contractor breach', 'Cryptocurrency exchange hacks'],
-  },
-  'Brazil': {
-    cyberThreat: 60, privacyScore: 40, surveillanceLevel: 'Moderate',
-    censorship: 'Low', dataRetention: 'Mandatory (Marco Civil)', fiveEyes: false,
-    knownAPTs: ['Prilex'],
-    recentIncidents: ['Banking malware surge', 'PIX fraud campaigns', 'Government portal breach'],
-  },
-  'Australia': {
-    cyberThreat: 55, privacyScore: 40, surveillanceLevel: 'High',
-    censorship: 'Low', dataRetention: 'Mandatory', fiveEyes: true,
-    knownAPTs: [],
-    recentIncidents: ['Optus data breach', 'Medibank hack', 'Port operator ransomware'],
-  },
-  'Canada': {
-    cyberThreat: 50, privacyScore: 55, surveillanceLevel: 'Moderate',
-    censorship: 'Low', dataRetention: 'Limited', fiveEyes: true,
-    knownAPTs: [],
-    recentIncidents: ['Indigo ransomware', 'Government contractor breach', 'Healthcare system targeting'],
-  },
-};
-
-const DEFAULT_RISK: CountryRisk = {
-  cyberThreat: 50, privacyScore: 50, surveillanceLevel: 'Unknown',
-  censorship: 'Unknown', dataRetention: 'Unknown', fiveEyes: false,
-  knownAPTs: [], recentIncidents: ['Insufficient data for this region'],
-};
-
-const THREAT_FEED: ThreatFeedItem[] = [
-  { type: 'CRITICAL', source: 'CISA', message: 'Active exploitation of zero-day in enterprise VPN appliances', region: 'Global' },
-  { type: 'HIGH', source: 'NCSC', message: 'Spear-phishing campaign targeting financial sector using AI-generated lures', region: 'EMEA' },
-  { type: 'CRITICAL', source: 'CERT', message: 'Ransomware group deploying novel encryption targeting cloud backups', region: 'Americas' },
-  { type: 'MEDIUM', source: 'FBI', message: 'Business email compromise ring netting $12M across 40 organizations', region: 'North America' },
-  { type: 'HIGH', source: 'Mandiant', message: 'State-sponsored actor compromising telecom infrastructure globally', region: 'APAC' },
-  { type: 'CRITICAL', source: 'ENISA', message: 'Supply chain attack via popular npm package — 15M downloads affected', region: 'Global' },
-  { type: 'HIGH', source: 'CrowdStrike', message: 'New info-stealer variant bypassing EDR through kernel driver abuse', region: 'Global' },
-  { type: 'MEDIUM', source: 'Recorded Future', message: 'DDoS-for-hire services targeting healthcare organizations', region: 'Europe' },
-  { type: 'HIGH', source: 'Unit42', message: 'Cryptojacking campaign targeting misconfigured Kubernetes clusters', region: 'Global' },
-  { type: 'CRITICAL', source: 'Secureworks', message: 'Wiper malware targeting industrial control systems in energy sector', region: 'Middle East' },
-  { type: 'MEDIUM', source: 'Kaspersky', message: 'Banking trojan evolves with deepfake voice cloning for call center fraud', region: 'LATAM' },
-  { type: 'HIGH', source: 'MITRE', message: 'Novel persistence technique abusing Windows CIM repository', region: 'Global' },
-];
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  COUNTRY_RISK_DB,
+  DATA_AS_OF,
+  OVERVIEW_STATS,
+  SOURCE_CITATIONS,
+  THREAT_FEED,
+  type CountryRisk,
+  type SourceId,
+  type ThreatFeedItem,
+  type ThreatSeverity,
+} from '../data/gti';
 
 /* ------------------------------------------------------------------ */
 /*  HELPERS                                                            */
 /* ------------------------------------------------------------------ */
 
-function severityClass(type: string): string {
-  switch (type) {
-    case 'CRITICAL': return 'gti-severity gti-severity--critical';
-    case 'HIGH': return 'gti-severity gti-severity--high';
-    case 'MEDIUM': return 'gti-severity gti-severity--medium';
-    default: return 'gti-severity';
-  }
+function severityClass(severity: ThreatSeverity): string {
+  return `gti-severity gti-severity--${severity.toLowerCase()}`;
 }
 
 function riskColor(score: number, invert = false): string {
-  const effective = invert ? 100 - score : score;
-  if (effective > 70) return 'var(--gti-critical)';
-  if (effective > 50) return 'var(--gti-high)';
-  if (effective > 30) return 'var(--gti-medium)';
+  const eff = invert ? 100 - score : score;
+  if (eff > 70) return 'var(--gti-critical)';
+  if (eff > 50) return 'var(--gti-high)';
+  if (eff > 30) return 'var(--gti-medium)';
   return 'var(--gti-safe)';
+}
+
+function surveillanceColor(level: string): string {
+  if (level === 'Extreme' || level === 'Very High') return 'var(--gti-critical)';
+  if (level === 'High') return 'var(--gti-high)';
+  if (level === 'Moderate') return 'var(--gti-medium)';
+  return 'var(--gti-text)';
+}
+
+function monthLabel(iso: string): string {
+  // "2026-04" → "April 2026"
+  const [y, m] = iso.split('-').map(Number);
+  if (!y || !m) return iso;
+  const date = new Date(Date.UTC(y, m - 1, 1));
+  return date.toLocaleString(undefined, { month: 'long', year: 'numeric', timeZone: 'UTC' });
+}
+
+/**
+ * requestAnimationFrame counter — smooth, ease-out-cubic ramp from 0 to target.
+ * Replaces setInterval for a cleaner animation that doesn't jitter under load.
+ */
+function useAnimatedNumber(target: number, durationMs = 1400): number {
+  const [value, setValue] = useState(0);
+  const rafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const start = performance.now();
+    const tick = (now: number) => {
+      const elapsed = now - start;
+      const p = Math.min(elapsed / durationMs, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setValue(Math.round(target * eased));
+      if (p < 1) {
+        rafRef.current = requestAnimationFrame(tick);
+      }
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+    };
+  }, [target, durationMs]);
+
+  return value;
+}
+
+function HudCorners() {
+  return (
+    <>
+      <span className="hud-corner hud-corner-tl" aria-hidden="true" />
+      <span className="hud-corner hud-corner-tr" aria-hidden="true" />
+      <span className="hud-corner hud-corner-bl" aria-hidden="true" />
+      <span className="hud-corner hud-corner-br" aria-hidden="true" />
+    </>
+  );
 }
 
 /* ------------------------------------------------------------------ */
 /*  SUB-COMPONENTS                                                     */
 /* ------------------------------------------------------------------ */
 
+function OverviewStatTile({ label, value, source, tooltip }: { label: string; value: number; source: SourceId; tooltip: string }) {
+  const displayed = useAnimatedNumber(value);
+  return (
+    <div className="gti-stat" title={tooltip}>
+      <strong className="gti-stat-value">{displayed.toLocaleString()}</strong>
+      <span className="gti-stat-label">{label}</span>
+      <span className="gti-stat-source">{source}</span>
+    </div>
+  );
+}
+
 function GlobalThreatOverview() {
-  const targets = useMemo(() => ({
-    activeCampaigns: 847,
-    countriesAffected: 142,
-    breachesThisMonth: 2341,
-    ransomwareIncidents: 156,
-  }), []);
-
-  const [stats, setStats] = useState({ activeCampaigns: 0, countriesAffected: 0, breachesThisMonth: 0, ransomwareIncidents: 0 });
-
-  useEffect(() => {
-    const steps = 50;
-    const duration = 2000;
-    let step = 0;
-    const interval = setInterval(() => {
-      step++;
-      const p = Math.min(step / steps, 1);
-      const e = 1 - Math.pow(1 - p, 3);
-      setStats({
-        activeCampaigns: Math.floor(targets.activeCampaigns * e),
-        countriesAffected: Math.floor(targets.countriesAffected * e),
-        breachesThisMonth: Math.floor(targets.breachesThisMonth * e),
-        ransomwareIncidents: Math.floor(targets.ransomwareIncidents * e),
-      });
-      if (step >= steps) clearInterval(interval);
-    }, duration / steps);
-    return () => clearInterval(interval);
-  }, [targets]);
-
   return (
     <div className="gti-card">
+      <HudCorners />
       <div className="gti-card-header">
-        <h3>Global Threat Overview</h3>
+        <h3>Global Threat Landscape</h3>
         <span className="gti-badge gti-badge--live">
-          <span className="gti-pulse" /> Real-Time
+          <span className="gti-pulse" aria-hidden="true" />
+          Reference · {monthLabel(DATA_AS_OF)}
         </span>
       </div>
+      <p className="gti-card-lead">
+        Counts drawn from public catalogs. Every tile is a verifiable index, not a live estimate.
+      </p>
       <div className="gti-stats-grid">
-        <div className="gti-stat">
-          <strong style={{ color: 'var(--gti-critical)' }}>{stats.activeCampaigns.toLocaleString()}</strong>
-          <span>Active Campaigns</span>
-        </div>
-        <div className="gti-stat">
-          <strong style={{ color: 'var(--gti-high)' }}>{stats.countriesAffected}</strong>
-          <span>Countries Affected</span>
-        </div>
-        <div className="gti-stat">
-          <strong style={{ color: 'var(--gti-accent)' }}>{stats.breachesThisMonth.toLocaleString()}</strong>
-          <span>Breaches (Mar&nbsp;2026)</span>
-        </div>
-        <div className="gti-stat">
-          <strong style={{ color: 'var(--gti-medium)' }}>{stats.ransomwareIncidents}</strong>
-          <span>Ransomware</span>
-        </div>
+        {OVERVIEW_STATS.map((s) => (
+          <OverviewStatTile key={s.label} {...s} />
+        ))}
       </div>
     </div>
   );
 }
 
-function CountryIntelligence() {
-  /* Default to US since the tracker focuses on US surveillance infrastructure */
-  const country = 'United States';
-  const risk = COUNTRY_RISK_DB[country] ?? DEFAULT_RISK;
-  const overall = Math.round((risk.cyberThreat + (100 - risk.privacyScore)) / 2);
-  const level = overall > 70 ? 'CRITICAL' : overall > 50 ? 'ELEVATED' : overall > 30 ? 'MODERATE' : 'LOW';
+function ScoreRing({ value, invert = false, label }: { value: number; invert?: boolean; label: string }) {
+  const color = riskColor(value, invert);
+  const circumference = 188.5; // 2π × 30
+  const dashArray = `${(value / 100) * circumference} ${circumference}`;
+  const animated = useAnimatedNumber(value, 900);
+  return (
+    <div className="gti-score-ring">
+      <svg viewBox="0 0 72 72" className="gti-ring-svg" aria-hidden="true">
+        <circle cx="36" cy="36" r="30" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="5" />
+        <circle
+          cx="36" cy="36" r="30" fill="none"
+          stroke={color}
+          strokeWidth="5" strokeLinecap="round"
+          strokeDasharray={dashArray}
+          transform="rotate(-90 36 36)"
+          style={{ filter: `drop-shadow(0 0 5px ${color})` }}
+        />
+      </svg>
+      <span className="gti-ring-value" style={{ color }}>{animated}</span>
+      <span className="gti-ring-label">{label}</span>
+    </div>
+  );
+}
+
+function CountryCard({ country, onChange }: { country: CountryRisk; onChange: (name: string) => void }) {
+  const overall = Math.round((country.cyberThreat + (100 - country.privacyScore)) / 2);
+  const level: ThreatSeverity =
+    overall > 70 ? 'CRITICAL' : overall > 50 ? 'HIGH' : 'MEDIUM';
 
   return (
     <div className="gti-card">
+      <HudCorners />
       <div className="gti-card-header">
-        <h3>Country Intelligence &mdash; {country}</h3>
-        <span className={severityClass(overall > 70 ? 'CRITICAL' : overall > 50 ? 'HIGH' : 'MEDIUM')}>{level}</span>
+        <h3>
+          <span className="gti-country-flag" aria-hidden="true">{country.flag}</span>
+          Country Risk &mdash; {country.name}
+        </h3>
+        <span className={severityClass(level)}>{level}</span>
+      </div>
+
+      <div className="gti-country-picker-wrap">
+        <label className="gti-country-picker-label" htmlFor="gti-country-picker">Switch country</label>
+        <select
+          id="gti-country-picker"
+          className="gti-country-picker"
+          value={country.name}
+          onChange={(e) => onChange(e.target.value)}
+        >
+          {Object.values(COUNTRY_RISK_DB)
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .map((c) => (
+              <option key={c.name} value={c.name}>
+                {c.flag} {c.name}
+              </option>
+            ))}
+        </select>
       </div>
 
       <div className="gti-scores">
-        <div className="gti-score-ring">
-          <svg viewBox="0 0 72 72" className="gti-ring-svg">
-            <circle cx="36" cy="36" r="30" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="5" />
-            <circle
-              cx="36" cy="36" r="30" fill="none"
-              stroke={riskColor(risk.cyberThreat)}
-              strokeWidth="5" strokeLinecap="round"
-              strokeDasharray={`${(risk.cyberThreat / 100) * 188.5} 188.5`}
-              transform="rotate(-90 36 36)"
-            />
-          </svg>
-          <span className="gti-ring-value" style={{ color: riskColor(risk.cyberThreat) }}>{risk.cyberThreat}</span>
-          <span className="gti-ring-label">Cyber Threat</span>
-        </div>
-        <div className="gti-score-ring">
-          <svg viewBox="0 0 72 72" className="gti-ring-svg">
-            <circle cx="36" cy="36" r="30" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="5" />
-            <circle
-              cx="36" cy="36" r="30" fill="none"
-              stroke={riskColor(risk.privacyScore, true)}
-              strokeWidth="5" strokeLinecap="round"
-              strokeDasharray={`${(risk.privacyScore / 100) * 188.5} 188.5`}
-              transform="rotate(-90 36 36)"
-            />
-          </svg>
-          <span className="gti-ring-value" style={{ color: riskColor(risk.privacyScore, true) }}>{risk.privacyScore}</span>
-          <span className="gti-ring-label">Privacy Score</span>
-        </div>
+        <ScoreRing value={country.cyberThreat} label="Cyber Threat" />
+        <ScoreRing value={country.privacyScore} invert label="Privacy Score" />
       </div>
 
       <div className="gti-rows">
-        <div className="gti-row"><span>Surveillance Level</span><span style={{ color: risk.surveillanceLevel === 'High' || risk.surveillanceLevel === 'Very High' || risk.surveillanceLevel === 'Extreme' ? 'var(--gti-high)' : 'var(--gti-text)' }}>{risk.surveillanceLevel}</span></div>
-        <div className="gti-row"><span>Censorship</span><span>{risk.censorship}</span></div>
-        <div className="gti-row"><span>Data Retention</span><span>{risk.dataRetention}</span></div>
+        <div className="gti-row">
+          <span>Surveillance Level</span>
+          <span style={{ color: surveillanceColor(country.surveillanceLevel) }}>{country.surveillanceLevel}</span>
+        </div>
+        <div className="gti-row">
+          <span>Censorship</span>
+          <span>{country.censorship}</span>
+        </div>
+        <div className="gti-row">
+          <span>Data Retention</span>
+          <span>{country.dataRetention}</span>
+        </div>
         <div className="gti-row">
           <span>Five Eyes Alliance</span>
-          <span style={{ color: risk.fiveEyes ? 'var(--gti-high)' : 'var(--gti-dim)' }}>{risk.fiveEyes ? 'Yes' : 'No'}</span>
+          <span style={{ color: country.fiveEyes ? 'var(--gti-high)' : 'var(--gti-dim)' }}>
+            {country.fiveEyes ? 'Member' : 'Not a member'}
+          </span>
         </div>
+        {country.fotn !== null && (
+          <div className="gti-row">
+            <span>Internet Freedom <sup className="gti-source-sup">FOTN</sup></span>
+            <span>{country.fotn}/100</span>
+          </div>
+        )}
+        {country.gci !== null && (
+          <div className="gti-row">
+            <span>Cybersecurity Maturity <sup className="gti-source-sup">GCI</sup></span>
+            <span>{country.gci}/100</span>
+          </div>
+        )}
       </div>
 
-      {risk.knownAPTs.length > 0 && (
+      {country.knownAPTs.length > 0 && (
         <div className="gti-tags-section">
-          <span className="gti-tags-label">Known APT Groups</span>
+          <span className="gti-tags-label">
+            Attributed APT Groups
+            <sup className="gti-source-sup">MITRE ATT&amp;CK</sup>
+          </span>
           <div className="gti-tags">
-            {risk.knownAPTs.map((apt) => (
-              <span key={apt} className="gti-tag gti-tag--danger">{apt}</span>
+            {country.knownAPTs.map((apt) => (
+              <span
+                key={apt.name}
+                className="gti-tag gti-tag--danger"
+                title={apt.mitreId ? `MITRE Group ${apt.mitreId}` : undefined}
+              >
+                {apt.name}
+                {apt.mitreId && <span className="gti-tag-mitre">· {apt.mitreId}</span>}
+              </span>
             ))}
           </div>
         </div>
       )}
 
-      {risk.recentIncidents.length > 0 && (
+      {country.recentIncidents.length > 0 && (
         <div className="gti-incidents">
-          <span className="gti-tags-label">Recent Incidents</span>
-          {risk.recentIncidents.map((inc, i) => (
-            <div key={i} className="gti-incident">
-              <span className="gti-incident-dot" />
-              <span>{inc}</span>
+          <span className="gti-tags-label">Recent Incidents (public)</span>
+          {country.recentIncidents.map((inc) => (
+            <div key={inc.title} className="gti-incident">
+              <span className="gti-incident-dot" aria-hidden="true" />
+              <span className="gti-incident-title">{inc.title}</span>
+              <span className="gti-incident-year">{inc.year}</span>
             </div>
           ))}
         </div>
@@ -281,36 +258,51 @@ function LiveThreatFeed() {
   useEffect(() => {
     const interval = setInterval(() => {
       setIndex((prev) => (prev + 1) % THREAT_FEED.length);
-    }, 4000);
+    }, 4200);
     return () => clearInterval(interval);
   }, []);
 
-  const current = THREAT_FEED[index];
+  const current: ThreatFeedItem = THREAT_FEED[index];
 
   return (
     <div className="gti-card">
+      <HudCorners />
       <div className="gti-card-header">
-        <h3>Live Threat Feed</h3>
+        <h3>Active Threat Signals</h3>
         <span className="gti-badge gti-badge--live">
-          <span className="gti-pulse" /> Live
+          <span className="gti-pulse" aria-hidden="true" />
+          Curated · rotating
         </span>
       </div>
+      <p className="gti-card-lead">
+        Named campaigns + CVEs drawn from CISA KEV and MITRE ATT&amp;CK. References are clickable below.
+      </p>
 
-      {/* Featured item */}
       <div className="gti-feed-featured" key={index}>
         <div className="gti-feed-meta">
-          <span className={severityClass(current.type)}>{current.type}</span>
+          <span className={severityClass(current.severity)}>{current.severity}</span>
           <span className="gti-feed-source">{current.source}</span>
+          <a
+            className="gti-feed-ref"
+            href={referenceUrl(current)}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {current.reference}
+          </a>
           <span className="gti-feed-region">{current.region}</span>
         </div>
         <p className="gti-feed-message">{current.message}</p>
       </div>
 
-      {/* Condensed list */}
       <div className="gti-feed-list">
-        {THREAT_FEED.slice(0, 8).map((item, i) => (
-          <div key={i} className={`gti-feed-row ${i === index % 8 ? 'gti-feed-row--active' : ''}`}>
-            <span className={severityClass(item.type)}>{item.type.charAt(0)}</span>
+        {THREAT_FEED.slice(0, 10).map((item, i) => (
+          <div
+            key={`${item.reference}-${i}`}
+            className={`gti-feed-row ${i === index % 10 ? 'gti-feed-row--active' : ''}`}
+          >
+            <span className={severityClass(item.severity)}>{item.severity.charAt(0)}</span>
+            <span className="gti-feed-ref-small">{item.reference}</span>
             <span className="gti-feed-row-msg">{item.message}</span>
           </div>
         ))}
@@ -319,28 +311,23 @@ function LiveThreatFeed() {
   );
 }
 
+function referenceUrl(item: ThreatFeedItem): string {
+  if (item.reference.startsWith('CVE-')) {
+    return `https://nvd.nist.gov/vuln/detail/${item.reference}`;
+  }
+  if (item.reference.startsWith('G') && /^G\d+$/.test(item.reference)) {
+    return `https://attack.mitre.org/groups/${item.reference}/`;
+  }
+  if (/^T\d/.test(item.reference)) {
+    return `https://attack.mitre.org/techniques/${item.reference.replace('.', '/')}/`;
+  }
+  return 'https://attack.mitre.org/';
+}
+
 function ExposureAssessment() {
-  const [score, setScore] = useState(0);
-  const target = 78; /* simulated exposure for a typical US user */
+  const target = 78;
+  const score = useAnimatedNumber(target, 1400);
 
-  useEffect(() => {
-    let current = 0;
-    const interval = setInterval(() => {
-      current += 2;
-      if (current >= target) {
-        setScore(target);
-        clearInterval(interval);
-      } else {
-        setScore(current);
-      }
-    }, 25);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Each vector declares whether its "detected=true" state is *bad* for the user.
-  // Exposures (IP leak, fingerprint captured, WebRTC leak) are threats when detected.
-  // Protections (ad blocker active, DNT enabled, VPN active) are threats when NOT detected.
-  // This replaces a prior nested ternary that always rendered "No" for non-detected rows.
   type Vector = { label: string; detected: boolean; isProtection?: boolean };
   const vectors: Vector[] = [
     { label: 'IP address exposed', detected: true },
@@ -354,7 +341,6 @@ function ExposureAssessment() {
     { label: 'WebRTC leak detected', detected: true },
   ];
 
-  // "At risk" when an exposure is detected OR a protection is not detected.
   const atRisk = (v: Vector) => (v.isProtection ? !v.detected : v.detected);
 
   const barColor = score > 70
@@ -365,12 +351,17 @@ function ExposureAssessment() {
 
   return (
     <div className="gti-card">
+      <HudCorners />
       <div className="gti-card-header">
-        <h3>Exposure Assessment</h3>
+        <h3>Your Exposure (Simulated)</h3>
         <span className={`gti-severity ${score > 70 ? 'gti-severity--critical' : score > 40 ? 'gti-severity--high' : 'gti-severity--medium'}`}>
           {score}/100
         </span>
       </div>
+      <p className="gti-card-lead">
+        A rough model of what a typical tracker network sees on an un-hardened browser — see the
+        Watcher site for your real fingerprint readout.
+      </p>
 
       <div className="gti-exposure-bar-wrap">
         <div className="gti-exposure-bar-track">
@@ -392,7 +383,7 @@ function ExposureAssessment() {
                 className={`gti-status-dot ${risk ? 'gti-status-dot--alert' : 'gti-status-dot--safe'}`}
                 aria-label={risk ? 'Exposed' : 'Safe'}
               >
-                {v.isProtection ? (v.detected ? 'Yes' : 'No') : (v.detected ? 'Yes' : 'No')}
+                {v.detected ? 'Yes' : 'No'}
               </span>
             </div>
           );
@@ -414,6 +405,7 @@ function ExtensionCTA() {
 
   return (
     <div className="gti-card gti-card--cta">
+      <HudCorners />
       <div className="gti-card-header">
         <h3>Protect Yourself</h3>
         <span className="gti-badge gti-badge--shield">
@@ -454,31 +446,64 @@ function ExtensionCTA() {
   );
 }
 
+function SourcesPanel() {
+  return (
+    <div className="gti-sources">
+      <div className="gti-sources-header">
+        <h4>Data Sources</h4>
+        <span className="gti-sources-stamp">Snapshot · {monthLabel(DATA_AS_OF)}</span>
+      </div>
+      <ul className="gti-sources-list">
+        {SOURCE_CITATIONS.map((s) => (
+          <li key={s.id}>
+            <span className="gti-source-badge">{s.id}</span>
+            <a href={s.url} target="_blank" rel="noopener noreferrer">
+              {s.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /*  MAIN EXPORT                                                        */
 /* ------------------------------------------------------------------ */
 
 function GlobalThreatIntelligence() {
+  const [country, setCountry] = useState<string>('United States');
+  const active = useMemo(
+    () => COUNTRY_RISK_DB[country] ?? COUNTRY_RISK_DB['United States'],
+    [country],
+  );
+
   return (
     <section className="gti-section" aria-labelledby="gti-heading">
       <header className="gti-intro">
+        <div className="gti-intro-label">
+          <span className="gti-intro-dot" aria-hidden="true" />
+          Intelligence Brief
+        </div>
         <h2 id="gti-heading">Global Threat Intelligence</h2>
         <p>
-          Real-time cyber threat landscape monitoring, country-level risk profiling,
-          and digital exposure assessment. Data synthesized from OSINT feeds and
-          threat intelligence providers.
+          Country-level surveillance profiling, active campaign tracking, and a simulated
+          exposure readout — all drawn from public catalogs (CISA KEV, MITRE ATT&amp;CK,
+          Freedom House, ITU). Reference snapshot, <strong>{monthLabel(DATA_AS_OF)}</strong>.
         </p>
       </header>
 
       <div className="gti-grid">
         <GlobalThreatOverview />
-        <CountryIntelligence />
+        <CountryCard country={active} onChange={setCountry} />
       </div>
       <LiveThreatFeed />
       <div className="gti-grid">
         <ExposureAssessment />
         <ExtensionCTA />
       </div>
+
+      <SourcesPanel />
     </section>
   );
 }
