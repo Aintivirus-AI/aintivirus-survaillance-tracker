@@ -933,152 +933,170 @@ body.nav-no-scroll {
   display: block;
 }
 
+/* ================================================================== *
+   ALL-SEEING EYE — brand mark
+   Composition: outer rune ring / radar sweep / sacred triangle /
+                layered eye / 12 rolling-pulse rays.
+   All transforms are GPU-friendly; the `prefers-reduced-motion`
+   block near the end of this file halts the ambient loops.
+ * ================================================================== */
+
 .eye-logo {
   width: 100%;
-  max-width: 138px;
+  max-width: 148px;
   height: auto;
   display: block;
-  filter: drop-shadow(0 18px 40px rgba(14, 116, 255, 0.3));
+  overflow: visible;
+  filter:
+    drop-shadow(0 18px 44px rgba(14, 116, 255, 0.32))
+    drop-shadow(0 0 22px rgba(56, 189, 248, 0.18));
 }
 
-.eye-logo .eye-triangle {
-  stroke: rgba(148, 197, 255, 0.6);
-  stroke-width: 3;
-  paint-order: stroke fill;
+/* --- Outer rune ring — slow orbital rotation ----------------------- */
+.eye-logo .eye-rune-ring {
+  transform-origin: 100px 100px;
+  transform-box: view-box;
+  animation: eye-rune-orbit 48s linear infinite;
 }
 
+/* --- Radar sweep (behind the triangle) ----------------------------- */
+.eye-logo .eye-radar-wrap {
+  mix-blend-mode: screen;
+}
+.eye-logo .eye-radar {
+  transform-origin: 0 0;
+  transform-box: view-box;
+  animation: eye-radar-sweep 6.2s linear infinite;
+  opacity: 0.8;
+}
+
+/* --- Sacred triangle ----------------------------------------------- */
+.eye-logo .eye-tri-wrap {
+  transform-origin: 100px 120px;
+  transform-box: view-box;
+}
+.eye-logo .eye-tri-halo {
+  opacity: 0.75;
+  animation: eye-tri-breath 5.8s ease-in-out infinite;
+  transform-origin: 100px 120px;
+  transform-box: view-box;
+}
+.eye-logo .eye-tri-edge {
+  animation: eye-tri-edge-shift 7.4s ease-in-out infinite;
+}
+
+/* --- Eye mark: blink + subtle idle gaze ---------------------------- */
 .eye-logo .eye-mark {
-  transform-origin: center;
-  transform-box: fill-box;
-  transform: scaleY(1);
-  animation: eyeBlink 4s ease-in-out infinite;
+  transform-origin: 100px 120px;
+  transform-box: view-box;
+  animation: eye-blink 6s cubic-bezier(0.6, 0, 0.4, 1) infinite;
 }
 
-.eye-logo .eye-outline {
-  fill: none;
-  stroke: rgba(226, 232, 240, 0.96);
-  stroke-width: 8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+/* Sclera catches a faint shimmer across its highlight */
+.eye-logo .eye-lens-catch {
+  opacity: 0.75;
+  animation: eye-lens-shimmer 5s ease-in-out infinite;
 }
 
-.eye-logo .eye-glow {
-  fill: rgba(56, 189, 248, 0.38);
-  transform-origin: center;
-  transform-box: fill-box;
-  animation: eyeGlowPulse 4.5s ease-in-out infinite;
+/* --- Iris ---------------------------------------------------------- */
+.eye-logo .eye-iris-group {
+  transform-origin: 100px 120px;
+  transform-box: view-box;
 }
-
 .eye-logo .eye-iris {
-  stroke: rgba(224, 242, 254, 0.6);
-  stroke-width: 2;
-  animation: irisShimmer 6s ease-in-out infinite;
+  animation: eye-iris-breath 6s ease-in-out infinite;
+  transform-origin: 100px 120px;
+  transform-box: view-box;
+}
+/* Camera aperture blades counter-rotate subtly — evokes a live lens */
+.eye-logo .eye-aperture {
+  animation: eye-aperture-spin 28s linear infinite reverse;
 }
 
-.eye-logo .eye-pupil {
-  fill: #0f172a;
-  stroke: rgba(148, 163, 184, 0.7);
-  stroke-width: 1.5;
+/* --- Pupil: micro-gaze, wandering slightly every cycle ------------- */
+.eye-logo .eye-pupil-group {
+  animation: eye-gaze 11s ease-in-out infinite;
+  transform-origin: 100px 120px;
+  transform-box: view-box;
 }
 
-.eye-logo .eye-highlight {
-  fill: rgba(255, 255, 255, 0.85);
-}
-
+/* --- Rays: rolling wave, phase-offset per ray ---------------------- */
 .eye-logo .eye-rays path {
-  stroke: rgba(56, 189, 248, 0.55);
-  stroke-width: 4;
+  fill: none;
+  stroke: rgba(125, 211, 252, 0.75);
+  stroke-width: 2.4;
   stroke-linecap: round;
-  stroke-dasharray: 34;
-  animation: eyeRayPulse 7s ease-in-out infinite;
+  stroke-dasharray: 38;
+  stroke-dashoffset: 32;
+  opacity: 0.25;
+  animation: eye-ray-wave 3.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.45));
 }
 
-.eye-logo .eye-rays path:nth-child(2) {
-  animation-delay: 0.6s;
+/* --- Keyframes ------------------------------------------------------ */
+@keyframes eye-rune-orbit {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
 
-.eye-logo .eye-rays path:nth-child(3) {
-  animation-delay: 1.2s;
+@keyframes eye-radar-sweep {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
 
-.eye-logo .eye-rays path:nth-child(4) {
-  animation-delay: 0.9s;
+@keyframes eye-tri-breath {
+  0%, 100% { opacity: 0.55; transform: scale(0.98); }
+  50%      { opacity: 0.9;  transform: scale(1.04); }
 }
 
-.eye-logo .eye-rays path:nth-child(5) {
-  animation-delay: 1.5s;
+@keyframes eye-tri-edge-shift {
+  0%, 100% { stroke-opacity: 0.75; filter: none; }
+  50%      { stroke-opacity: 1;    filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.45)); }
 }
 
-.eye-logo .eye-rays path:nth-child(6) {
-  animation-delay: 2.1s;
+@keyframes eye-blink {
+  /* idle (93% of cycle) + a sharp double-blink near the end */
+  0%, 88%  { transform: scaleY(1); }
+  90%      { transform: scaleY(0.16); }
+  91.5%    { transform: scaleY(0.04); }
+  93%      { transform: scaleY(1); }
+  /* faint second blink — feels alive, not robotic */
+  96.5%    { transform: scaleY(0.3); }
+  97.5%    { transform: scaleY(0.08); }
+  100%     { transform: scaleY(1); }
 }
 
-@keyframes eyeGlowPulse {
-  0%,
-  100% {
-    opacity: 0.5;
-    transform: scale(0.9);
-  }
-
-  50% {
-    opacity: 1;
-    transform: scale(1.05);
-  }
+@keyframes eye-iris-breath {
+  0%, 100% { transform: scale(1); filter: none; }
+  50%      { transform: scale(1.04); filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.55)); }
 }
 
-@keyframes eyeBlink {
-  0%,
-  92% {
-    transform: scaleY(1);
-  }
-
-  94% {
-    transform: scaleY(0.35);
-  }
-
-  95% {
-    transform: scaleY(0.12);
-  }
-
-  96% {
-    transform: scaleY(0.04);
-  }
-
-  97% {
-    transform: scaleY(0.02);
-  }
-
-  98% {
-    transform: scaleY(0.3);
-  }
-
-  100% {
-    transform: scaleY(1);
-  }
+@keyframes eye-aperture-spin {
+  from { transform: translate(100px, 120px) rotate(0deg); }
+  to   { transform: translate(100px, 120px) rotate(360deg); }
 }
 
-@keyframes irisShimmer {
-  0%,
-  100% {
-    opacity: 0.75;
-  }
-
-  50% {
-    opacity: 1;
-  }
+@keyframes eye-gaze {
+  /* The pupil drifts through four subtle "looks" per cycle, as if watching */
+  0%, 8%    { transform: translate(0, 0); }
+  18%       { transform: translate(1.6px, -0.8px); }
+  28%, 40%  { transform: translate(0, 0); }
+  50%       { transform: translate(-1.8px, 0.4px); }
+  60%, 72%  { transform: translate(0, 0); }
+  82%       { transform: translate(0.8px, 1.2px); }
+  92%, 100% { transform: translate(0, 0); }
 }
 
-@keyframes eyeRayPulse {
-  0%,
-  100% {
-    opacity: 0.25;
-    stroke-dashoffset: 24;
-  }
+@keyframes eye-lens-shimmer {
+  0%, 100% { opacity: 0.55; transform: translateX(0); }
+  50%      { opacity: 0.9;  transform: translateX(1.2px); }
+}
 
-  50% {
-    opacity: 0.95;
-    stroke-dashoffset: 0;
-  }
+@keyframes eye-ray-wave {
+  0%   { opacity: 0.12; stroke-dashoffset: 34; }
+  35%  { opacity: 0.95; stroke-dashoffset: 0; }
+  70%  { opacity: 0.55; stroke-dashoffset: 0; }
+  100% { opacity: 0.12; stroke-dashoffset: 34; }
 }
 
 .brand-copy p {
@@ -3335,8 +3353,23 @@ button.refresh-button:hover {
   .status-dot::after,
   .gti-pulse,
   .background-orb,
-  .scan-line {
+  .scan-line,
+  .eye-logo .eye-rune-ring,
+  .eye-logo .eye-radar,
+  .eye-logo .eye-mark,
+  .eye-logo .eye-pupil-group,
+  .eye-logo .eye-iris,
+  .eye-logo .eye-aperture,
+  .eye-logo .eye-tri-halo,
+  .eye-logo .eye-tri-edge,
+  .eye-logo .eye-lens-catch,
+  .eye-logo .eye-rays path {
     animation: none !important;
+  }
+  /* But keep the ray gradient visible (no sweep, full opacity) */
+  .eye-logo .eye-rays path {
+    opacity: 0.6;
+    stroke-dashoffset: 0;
   }
 }
 
