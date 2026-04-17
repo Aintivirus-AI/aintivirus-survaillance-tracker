@@ -10,6 +10,13 @@ import {
   type ThreatFeedItem,
   type ThreatSeverity,
 } from '../data/gti';
+import {
+  useBreachFeed,
+  useKevFeed,
+  useStalkerwareFeed,
+  type BreachEntry,
+  type KevEntry,
+} from '../hooks/useThreatIntel';
 
 /* ------------------------------------------------------------------ */
 /*  HELPERS                                                            */
@@ -85,34 +92,75 @@ function HudCorners() {
 /*  SUB-COMPONENTS                                                     */
 /* ------------------------------------------------------------------ */
 
-function OverviewStatTile({ label, value, source, tooltip }: { label: string; value: number; source: SourceId; tooltip: string }) {
+function OverviewStatTile({ label, value, source, tooltip, live }: { label: string; value: number; source: SourceId | string; tooltip: string; live?: boolean }) {
   const displayed = useAnimatedNumber(value);
   return (
     <div className="gti-stat" title={tooltip}>
       <strong className="gti-stat-value">{displayed.toLocaleString()}</strong>
       <span className="gti-stat-label">{label}</span>
-      <span className="gti-stat-source">{source}</span>
+      <span className={`gti-stat-source ${live ? 'gti-stat-source--live' : ''}`}>
+        {live && <span className="gti-stat-live-dot" aria-hidden="true" />}
+        {source}
+      </span>
     </div>
   );
 }
 
 function GlobalThreatOverview() {
+  const kev = useKevFeed();
+  const breaches = useBreachFeed();
+
+  // Start with reference snapshot values; overwrite the KEV tile + breach tile
+  // once live data arrives. Breaches is a new tile that replaces the static
+  // "Countries benchmarked" when live — keeping four tiles consistent.
+  const tiles = useMemo(() => {
+    const base = [...OVERVIEW_STATS];
+    // Update KEV tile if live
+    const kevIdx = base.findIndex((s) => s.source === 'KEV');
+    if (kevIdx >= 0 && kev.status === 'ready') {
+      base[kevIdx] = {
+        ...base[kevIdx],
+        value: kev.data.totalCount,
+        label: 'Known-exploited CVEs (live)',
+        tooltip: `${kev.data.totalCount} CVEs in CISA KEV · version ${kev.data.catalogVersion ?? 'n/a'}`,
+      };
+    }
+    // Replace the last tile (Countries benchmarked) with live breach count when available
+    if (breaches.status === 'ready') {
+      const last = base.length - 1;
+      base[last] = {
+        label: 'Public breaches tracked (live)',
+        value: breaches.data.totalCount,
+        source: 'KEV' as SourceId, // reuse KEV id just for the badge style; actual source shown below
+        tooltip: `${breaches.data.totalCount} verified public breaches · HaveIBeenPwned`,
+      };
+    }
+    return base;
+  }, [kev, breaches]);
+
   return (
     <div className="gti-card">
       <HudCorners />
       <div className="gti-card-header">
         <h3>Global Threat Landscape</h3>
-        <span className="gti-badge gti-badge--live">
+        <span className={`gti-badge ${kev.status === 'ready' || breaches.status === 'ready' ? 'gti-badge--live' : 'gti-badge--dim'}`}>
           <span className="gti-pulse" aria-hidden="true" />
-          Reference · {monthLabel(DATA_AS_OF)}
+          {kev.status === 'ready' || breaches.status === 'ready' ? 'Live' : `Reference · ${monthLabel(DATA_AS_OF)}`}
         </span>
       </div>
       <p className="gti-card-lead">
-        Counts drawn from public catalogs. Every tile is a verifiable index, not a live estimate.
+        Two tiles pull live from CISA KEV + HaveIBeenPwned; the others are reference indices. Every number is sourced.
       </p>
       <div className="gti-stats-grid">
-        {OVERVIEW_STATS.map((s) => (
-          <OverviewStatTile key={s.label} {...s} />
+        {tiles.map((s, i) => (
+          <OverviewStatTile
+            key={`${s.label}-${i}`}
+            label={s.label}
+            value={s.value}
+            source={s.source === 'KEV' && breaches.status === 'ready' && i === tiles.length - 1 ? 'HIBP' : s.source}
+            tooltip={s.tooltip}
+            live={(s.label.includes('live')) ? true : false}
+          />
         ))}
       </div>
     </div>
@@ -252,30 +300,62 @@ function CountryCard({ country, onChange }: { country: CountryRisk; onChange: (n
   );
 }
 
-function LiveThreatFeed() {
-  const [index, setIndex] = useState(0);
+function kevToFeedItem(entry: KevEntry): ThreatFeedItem {
+  // Severity heuristic: if the CVE is in a known ransomware campaign it's CRITICAL,
+  // otherwise HIGH (CISA KEV is by definition actively-exploited — no MEDIUM bucket).
+  const severity: ThreatSeverity = entry.knownRansomwareCampaignUse ? 'CRITICAL' : 'HIGH';
+  return {
+    severity,
+    source: 'KEV',
+    reference: entry.cveId,
+    message: `${entry.vendor} ${entry.product} — ${entry.vulnerabilityName}${entry.knownRansomwareCampaignUse ? ' (ransomware use confirmed)' : ''}`,
+    region: `Added ${entry.dateAdded}`,
+  };
+}
 
+function LiveThreatFeed() {
+  const kev = useKevFeed();
+
+  // Merge live KEV top-10 (newest first) with curated feed items. Live items
+  // take the lead positions so users see the freshest CVEs.
+  const merged: ThreatFeedItem[] = useMemo(() => {
+    if (kev.status === 'ready') {
+      const live = kev.data.latest.slice(0, 10).map(kevToFeedItem);
+      // De-dup against curated feed by reference
+      const liveRefs = new Set(live.map((i) => i.reference));
+      const curated = THREAT_FEED.filter((i) => !liveRefs.has(i.reference));
+      return [...live, ...curated];
+    }
+    return THREAT_FEED;
+  }, [kev]);
+
+  const [index, setIndex] = useState(0);
   useEffect(() => {
+    if (merged.length === 0) return;
+    setIndex(0);
     const interval = setInterval(() => {
-      setIndex((prev) => (prev + 1) % THREAT_FEED.length);
+      setIndex((prev) => (prev + 1) % merged.length);
     }, 4200);
     return () => clearInterval(interval);
-  }, []);
+  }, [merged]);
 
-  const current: ThreatFeedItem = THREAT_FEED[index];
+  const current: ThreatFeedItem | undefined = merged[index];
+  if (!current) return null;
 
   return (
     <div className="gti-card">
       <HudCorners />
       <div className="gti-card-header">
         <h3>Active Threat Signals</h3>
-        <span className="gti-badge gti-badge--live">
+        <span className={`gti-badge ${kev.status === 'ready' ? 'gti-badge--live' : 'gti-badge--dim'}`}>
           <span className="gti-pulse" aria-hidden="true" />
-          Curated · rotating
+          {kev.status === 'ready' ? `Live · CISA KEV ${kev.data.catalogVersion ?? ''}` : 'Curated · rotating'}
         </span>
       </div>
       <p className="gti-card-lead">
-        Named campaigns + CVEs drawn from CISA KEV and MITRE ATT&amp;CK. References are clickable below.
+        {kev.status === 'ready'
+          ? `Top ${Math.min(10, kev.data.latest.length)} entries pulled from CISA's Known Exploited Vulnerabilities feed, blended with curated MITRE campaign references. Every entry is clickable.`
+          : 'Named campaigns + CVEs drawn from CISA KEV and MITRE ATT&CK. References are clickable below.'}
       </p>
 
       <div className="gti-feed-featured" key={index}>
@@ -296,7 +376,7 @@ function LiveThreatFeed() {
       </div>
 
       <div className="gti-feed-list">
-        {THREAT_FEED.slice(0, 10).map((item, i) => (
+        {merged.slice(0, 10).map((item, i) => (
           <div
             key={`${item.reference}-${i}`}
             className={`gti-feed-row ${i === index % 10 ? 'gti-feed-row--active' : ''}`}
@@ -307,6 +387,118 @@ function LiveThreatFeed() {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  New panels: Recent Breaches + Stalkerware                          */
+/* ------------------------------------------------------------------ */
+
+function formatPwnCount(n: number): string {
+  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B`;
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return n.toLocaleString();
+}
+
+function RecentBreachesCard() {
+  const breaches = useBreachFeed();
+
+  if (breaches.status === 'error') {
+    return null;
+  }
+
+  return (
+    <div className="gti-card">
+      <HudCorners />
+      <div className="gti-card-header">
+        <h3>Recent Public Breaches</h3>
+        <span className={`gti-badge ${breaches.status === 'ready' ? 'gti-badge--live' : 'gti-badge--dim'}`}>
+          <span className="gti-pulse" aria-hidden="true" />
+          {breaches.status === 'ready' ? `Live · HaveIBeenPwned (${breaches.data.totalCount})` : 'Loading…'}
+        </span>
+      </div>
+      <p className="gti-card-lead">
+        The most recently disclosed public data breaches tracked by HaveIBeenPwned. Sensitive breaches (marked with a warning) include SSNs, passwords, or similar high-impact data.
+      </p>
+
+      {breaches.status === 'loading' && <div className="gti-empty">Fetching…</div>}
+
+      {breaches.status === 'ready' && (
+        <div className="gti-breaches">
+          {breaches.data.recent.slice(0, 8).map((b: BreachEntry) => (
+            <a
+              key={b.name}
+              className={`gti-breach ${b.isSensitive ? 'gti-breach--sensitive' : ''}`}
+              href={`https://haveibeenpwned.com/PwnedWebsites#${encodeURIComponent(b.name)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <div className="gti-breach-head">
+                <span className="gti-breach-title">{b.title}</span>
+                {b.isSensitive && (
+                  <span className="gti-breach-flag" title="Sensitive breach">⚠</span>
+                )}
+              </div>
+              <div className="gti-breach-meta">
+                <span className="gti-breach-domain">{b.domain || '—'}</span>
+                <span className="gti-breach-count">{formatPwnCount(b.pwnCount)} accounts</span>
+                <span className="gti-breach-date">{b.breachDate}</span>
+              </div>
+              {b.dataClasses.length > 0 && (
+                <div className="gti-breach-classes">
+                  {b.dataClasses.slice(0, 4).map((dc) => (
+                    <span key={dc} className="gti-breach-class">{dc}</span>
+                  ))}
+                  {b.dataClasses.length > 4 && (
+                    <span className="gti-breach-class">+{b.dataClasses.length - 4}</span>
+                  )}
+                </div>
+              )}
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StalkerwareCard() {
+  const sw = useStalkerwareFeed();
+
+  if (sw.status === 'error') {
+    return null;
+  }
+
+  return (
+    <div className="gti-card">
+      <HudCorners />
+      <div className="gti-card-header">
+        <h3>Known Stalkerware Families</h3>
+        <span className={`gti-badge ${sw.status === 'ready' ? 'gti-badge--live' : 'gti-badge--dim'}`}>
+          <span className="gti-pulse" aria-hidden="true" />
+          {sw.status === 'ready' ? `${sw.data.totalAppFamilies} families · ${sw.data.totalIoc} IOCs` : 'Loading…'}
+        </span>
+      </div>
+      <p className="gti-card-lead">
+        Commercial surveillance apps that hide on a partner or family member's device. Catalog maintained by Echap and shared with Malwarebytes, Kaspersky, Avast.
+      </p>
+
+      {sw.status === 'loading' && <div className="gti-empty">Fetching…</div>}
+
+      {sw.status === 'ready' && (
+        <div className="gti-stalkerware-grid">
+          {sw.data.samples.slice(0, 18).map((s) => (
+            <div key={`${s.app}-${s.platform}`} className="gti-stalkerware-tag">
+              <span className="gti-stalkerware-name">{s.app}</span>
+              <span className={`gti-stalkerware-platform gti-stalkerware-platform--${s.platform.toLowerCase().replace(/\W/g, '')}`}>
+                {s.platform}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -498,6 +690,10 @@ function GlobalThreatIntelligence() {
         <CountryCard country={active} onChange={setCountry} />
       </div>
       <LiveThreatFeed />
+      <div className="gti-grid">
+        <RecentBreachesCard />
+        <StalkerwareCard />
+      </div>
       <div className="gti-grid">
         <ExposureAssessment />
         <ExtensionCTA />

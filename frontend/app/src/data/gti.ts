@@ -29,6 +29,8 @@ export const SOURCE_CITATIONS = [
   { id: 'MITRE', label: 'MITRE ATT&CK — Groups',                   url: 'https://attack.mitre.org/groups/' },
   { id: 'RiB',  label: 'Reporters Without Borders — Press Index',  url: 'https://rsf.org/en/index' },
   { id: 'PI',   label: 'Privacy International — State of Privacy', url: 'https://privacyinternational.org/' },
+  { id: 'HIBP', label: 'Have I Been Pwned — Breach Catalog',       url: 'https://haveibeenpwned.com/PwnedWebsites' },
+  { id: 'ECHAP', label: 'Echap — Stalkerware Indicators',          url: 'https://github.com/AssoEchap/stalkerware-indicators' },
 ] as const;
 
 export type SourceId = typeof SOURCE_CITATIONS[number]['id'];

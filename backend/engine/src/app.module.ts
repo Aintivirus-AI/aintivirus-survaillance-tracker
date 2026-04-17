@@ -9,6 +9,7 @@ import { DatasetModule } from './dataset/dataset.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { HealthModule } from './health/health.module';
+import { ThreatIntelModule } from './threat-intel/threat-intel.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { HealthModule } from './health/health.module';
     ConnectorsModule,
     DatasetModule,
     HealthModule,
+    ThreatIntelModule,
   ],
   controllers: [AppController],
   providers: [AppService],
