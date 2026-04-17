@@ -3,9 +3,22 @@ import type { DatasetStatus, LatestDataset } from '../types';
 
 const STORAGE_KEY = 'surveillance-tracker-dataset';
 const FALLBACK_URL = '/fallback-dataset.json';
-const API_BASE =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
-  'http://localhost:3000';
+
+/**
+ * Base URL for the engine API.
+ *
+ * - Explicit override via VITE_API_BASE_URL always wins (useful for split hosting
+ *   or preview environments).
+ * - In production builds we default to empty — the frontend is served same-origin
+ *   as the API via nginx `/api/` → :3000, so relative URLs just work.
+ * - In dev (`vite`, `npm run dev`) we default to http://localhost:3000 so the
+ *   frontend can hit the engine running alongside it.
+ */
+const API_BASE = ((): string => {
+  const explicit = import.meta.env.VITE_API_BASE_URL as string | undefined;
+  if (typeof explicit === 'string') return explicit;
+  return import.meta.env.DEV ? 'http://localhost:3000' : '';
+})();
 
 interface DatasetState {
   data: LatestDataset | null;
