@@ -2096,6 +2096,125 @@ button.refresh-button:hover {
     0 18px 36px rgba(3, 190, 255, 0.32);
 }
 
+/* Fallback: multi-action row (switch provider / open in tab) */
+.threat-map-fallback-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+.threat-map-fallback-link {
+  border: none;
+  cursor: pointer;
+  font: inherit;
+}
+
+.threat-map-fallback-link--secondary {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid var(--border-medium);
+  box-shadow: none;
+  color: var(--text-hi);
+}
+
+.threat-map-fallback-link--secondary:hover,
+.threat-map-fallback-link--secondary:focus-visible {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 1px var(--accent-primary);
+}
+
+/* Persistent footer under the map frame — always usable */
+.threat-map-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding-top: 0.25rem;
+  font-size: 0.85rem;
+  color: var(--text-md);
+}
+
+.threat-map-footer-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.threat-map-footer-label strong {
+  color: var(--text-hi);
+  font-weight: 600;
+}
+
+.threat-map-live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.12rem 0.55rem;
+  border-radius: 999px;
+  font-family: monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: rgba(187, 247, 208, 0.95);
+}
+
+.threat-map-live-pill::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ok, #10b981);
+  box-shadow: 0 0 6px currentColor;
+  animation: pulse-dot 1.8s var(--ease-out) infinite;
+}
+
+.threat-map-live-pill--dim {
+  background: rgba(15, 23, 42, 0.65);
+  border-color: rgba(148, 163, 184, 0.3);
+  color: var(--text-lo);
+}
+
+.threat-map-live-pill--dim::before {
+  animation: none;
+  background: var(--text-lo);
+  box-shadow: none;
+}
+
+.threat-map-footer-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.threat-map-footer-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 8px;
+  font-family: monospace;
+  font-size: 0.78rem;
+  color: var(--accent-primary);
+  background: transparent;
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  text-decoration: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.threat-map-footer-link:hover,
+.threat-map-footer-link:focus-visible {
+  background: rgba(6, 182, 212, 0.12);
+  border-color: var(--accent-primary);
+}
+
 
 /* ================================================================== */
 /*  GLOBAL THREAT INTELLIGENCE                                         */
@@ -3620,15 +3739,37 @@ button.refresh-button:hover {
   }
 
   .threat-map-panel {
-    padding: 1.5rem 1.35rem;
+    padding: 1.25rem 1rem;
+    gap: 1rem;
   }
 
+  .threat-map-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .threat-map-header p {
+    font-size: 0.88rem;
+  }
+
+  /* Let the 16:9 aspect-ratio own the height on mobile; no forced min. */
   .threat-map-frame {
-    min-height: 360px;
+    min-height: 0;
+    aspect-ratio: 16 / 10;
   }
 
   .threat-map-frame iframe {
-    min-height: 360px;
+    min-height: 0;
+  }
+
+  .threat-map-footer {
+    font-size: 0.78rem;
+    gap: 0.5rem;
+  }
+
+  .threat-map-footer-actions {
+    gap: 0.5rem;
+    width: 100%;
+    justify-content: flex-start;
   }
 
   .footer {
@@ -3835,6 +3976,206 @@ button.refresh-button:hover {
   .eye-logo .eye-rays path {
     opacity: 0.6;
     stroke-dashoffset: 0;
+  }
+}
+
+/* ================================================================== */
+/*  MOBILE — guard against horizontal overflow + tighten narrow screens
+ * ================================================================== */
+
+/* Universal overflow guard — nothing ever escapes the viewport width. */
+html, body, #root {
+  max-width: 100vw;
+  overflow-x: clip;
+}
+
+/* Wrap long URLs / CVE IDs / domains so they never force horizontal scroll. */
+.gti-feed-message,
+.gti-feed-row-msg,
+.gti-breach-domain,
+.gti-breach-title,
+.gti-feed-ref,
+.gti-feed-ref-small,
+.gti-sources-list a {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+@media (max-width: 720px) {
+  /* Sources list: allow tighter columns on mobile so 360px screens don't cut off. */
+  .gti-sources-list {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  .gti-sources {
+    padding: 1.25rem 1rem;
+  }
+  .gti-sources-header {
+    margin-bottom: 0.75rem;
+  }
+
+  /* Country picker header: allow wrapping the label + flag */
+  .gti-country-picker-wrap {
+    padding: 0.55rem 0.7rem;
+    gap: 0.45rem;
+  }
+  .gti-country-picker-label {
+    font-size: 0.6rem;
+  }
+  .gti-country-picker {
+    font-size: 0.9rem;
+    min-width: 0;
+    /* select respects display font + proper truncation on overflow */
+    text-overflow: ellipsis;
+  }
+
+  /* Card header: drop to column when the badge can't fit next to the title */
+  .gti-card-header {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .gti-card-header h3 {
+    font-size: 1rem;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+  .gti-card {
+    padding: 1.1rem;
+    gap: 1rem;
+  }
+  .gti-card-lead {
+    font-size: 0.8rem;
+  }
+
+  /* Overview tiles: 2×2 with smaller numbers */
+  .gti-stat-value {
+    font-size: 1.55rem;
+  }
+  .gti-stat-label {
+    font-size: 0.66rem;
+  }
+  .gti-stat-source {
+    font-size: 0.56rem;
+    padding: 0.1rem 0.35rem;
+  }
+
+  /* Score rings: stay at comfortable size, just reduce gap */
+  .gti-scores {
+    gap: 1rem;
+  }
+
+  /* Threat feed: allow long refs + messages to wrap */
+  .gti-feed-meta {
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+  .gti-feed-featured {
+    padding: 0.9rem;
+  }
+  .gti-feed-list {
+    font-size: 0.78rem;
+  }
+  .gti-feed-row {
+    flex-wrap: wrap;
+    gap: 0.35rem 0.5rem;
+  }
+
+  /* Recent breaches: single column with wrap-safe meta */
+  .gti-breach {
+    padding: 0.75rem 0.85rem;
+  }
+  .gti-breach-title {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+  .gti-breach-meta {
+    font-size: 0.65rem;
+    gap: 0.35rem 0.6rem;
+  }
+
+  /* Stalkerware tags: tighter spacing */
+  .gti-stalkerware-tag {
+    font-size: 0.72rem;
+    padding: 0.28rem 0.55rem;
+  }
+  .gti-stalkerware-platform {
+    font-size: 0.55rem;
+  }
+
+  /* Incidents: year wraps cleanly */
+  .gti-incident {
+    flex-wrap: wrap;
+    gap: 0.3rem 0.5rem;
+  }
+  .gti-incident-year {
+    margin-left: 0;
+  }
+
+  /* APT tags: allow the MITRE id to wrap under the name if long */
+  .gti-tag {
+    max-width: 100%;
+  }
+}
+
+/* Ultra-narrow screens (< 420px) — 1-up stats, minimal padding */
+@media (max-width: 420px) {
+  .gti-stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+  }
+  .gti-stat {
+    padding: 0.65rem 0.7rem;
+  }
+  .gti-stat-value {
+    font-size: 1.4rem;
+  }
+  .gti-card {
+    padding: 0.95rem;
+    border-radius: 14px;
+  }
+  .gti-intro h2 {
+    font-size: 1.15rem;
+  }
+  .gti-intro p {
+    font-size: 0.85rem;
+  }
+  .gti-intro-label {
+    font-size: 0.62rem;
+  }
+
+  /* Source cards: make room for long labels */
+  .source-card {
+    padding: 1.1rem 1rem;
+  }
+
+  /* Threat map: even tighter aspect on small phones */
+  .threat-map-panel {
+    padding: 1rem 0.85rem;
+  }
+  .threat-map-frame {
+    aspect-ratio: 4 / 3;
+  }
+
+  /* All-Seeing Eye gets a smaller cap */
+  .eye-logo,
+  .brand-logo {
+    max-width: 96px;
+  }
+}
+
+/* Belt-and-suspenders for any place a fixed ≥100vw element slipped in */
+@media (max-width: 720px) {
+  .app,
+  .content-shell,
+  .gti-section,
+  .threat-map-panel,
+  .footer {
+    max-width: 100%;
+  }
+  .source-card {
+    max-width: 100%;
+    min-width: 0;
   }
 }
 
