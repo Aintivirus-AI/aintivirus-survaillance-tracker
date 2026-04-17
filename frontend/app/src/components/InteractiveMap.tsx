@@ -4,6 +4,7 @@ import L from 'leaflet';
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 
 import type { DatasetRecord } from '../types';
+import { getOverpassTags, getRecordSourceUrl } from '../utils/overpassTags';
 
 import mapPinUrl from '../assets/map-pin.svg';
 
@@ -40,7 +41,6 @@ const InteractiveMap = forwardRef<HTMLElement, InteractiveMapProps>(
   ({ record }, ref) => {
   const hasCoordinates =
     Number.isFinite(record?.latitude) && Number.isFinite(record?.longitude);
-  const isOverpassRecord = Boolean(record?.uid?.startsWith('overpass-alpr-'));
 
   const position = useMemo<LatLngExpression | null>(() => {
     if (!hasCoordinates || record === null) {
@@ -59,30 +59,8 @@ const InteractiveMap = forwardRef<HTMLElement, InteractiveMapProps>(
     return null;
   }, [hasCoordinates, record]);
 
-  const overpassTags = useMemo(() => {
-    if (!isOverpassRecord || !record?.raw || typeof record.raw !== 'object') {
-      return undefined;
-    }
-    const candidate = (record.raw as Record<string, unknown>)['tags'];
-    if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) {
-      return undefined;
-    }
-    const entries = Object.entries(candidate).filter(
-      (entry): entry is [string, string] => typeof entry[1] === 'string',
-    );
-    if (entries.length === 0) {
-      return undefined;
-    }
-    return Object.fromEntries(entries);
-  }, [isOverpassRecord, record]);
-
-  const sourceUrl = useMemo(() => {
-    if (!isOverpassRecord || !record?.raw || typeof record.raw !== 'object') {
-      return undefined;
-    }
-    const value = (record.raw as Record<string, unknown>)['sourceUrl'];
-    return typeof value === 'string' ? value : undefined;
-  }, [isOverpassRecord, record]);
+  const overpassTags = useMemo(() => getOverpassTags(record), [record]);
+  const sourceUrl = useMemo(() => getRecordSourceUrl(record), [record]);
 
   const coordinateLabel = useMemo(() => {
     if (!hasCoordinates || !record) {
@@ -116,6 +94,11 @@ const InteractiveMap = forwardRef<HTMLElement, InteractiveMapProps>(
         </header>
 
         <div className="map-canvas">
+          <span className="hud-corner-tl" aria-hidden="true" />
+          <span className="hud-corner-tr" aria-hidden="true" />
+          <span className="hud-corner-bl" aria-hidden="true" />
+          <span className="hud-corner-br" aria-hidden="true" />
+
           <MapContainer
             center={position ?? DEFAULT_CENTER}
             className="map-container"

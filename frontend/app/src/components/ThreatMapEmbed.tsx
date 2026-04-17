@@ -29,12 +29,25 @@ function ThreatMapEmbed() {
       <header className="threat-map-header">
         <h2 id="threat-map-heading">Live DDoS Activity</h2>
         <p>
-          Real-time visualization of global DDoS attack telemetry provided by Check Point
-          Software Technologies. The feed may take a few seconds to initialize.
+          Real-time global DDoS telemetry streamed from Check Point&rsquo;s threat intelligence
+          network. Rotating globe view refreshes every few seconds.
         </p>
       </header>
 
       <div className="threat-map-frame">
+        {/* Radar skeleton underneath — dismissed once the iframe reports load */}
+        {!hasLoaded && (
+          <div className="skeleton-radar" aria-hidden="true">
+            <span className="skeleton-radar-label">Acquiring uplink…</span>
+          </div>
+        )}
+
+        {/* HUD corner brackets sit above iframe */}
+        <span className="hud-corner-tl" aria-hidden="true" />
+        <span className="hud-corner-tr" aria-hidden="true" />
+        <span className="hud-corner-bl" aria-hidden="true" />
+        <span className="hud-corner-br" aria-hidden="true" />
+
         <iframe
           title="Check Point DDoS Live Threat Map"
           src="https://threatmap.checkpoint.com/"
@@ -47,8 +60,8 @@ function ThreatMapEmbed() {
         {isFallbackVisible && !hasLoaded ? (
           <div className="threat-map-fallback" role="alert">
             <p>
-              We are unable to display the live threat map within the page. This can happen
-              if third-party embeds are blocked by your browser or network.
+              Unable to display the live threat map inline. Third-party embeds may be blocked
+              by your browser or network.
             </p>
             <a
               href="https://threatmap.checkpoint.com/"
@@ -66,5 +79,3 @@ function ThreatMapEmbed() {
 }
 
 export default ThreatMapEmbed;
-
-

@@ -337,17 +337,25 @@ function ExposureAssessment() {
     return () => clearInterval(interval);
   }, []);
 
-  const vectors = [
+  // Each vector declares whether its "detected=true" state is *bad* for the user.
+  // Exposures (IP leak, fingerprint captured, WebRTC leak) are threats when detected.
+  // Protections (ad blocker active, DNT enabled, VPN active) are threats when NOT detected.
+  // This replaces a prior nested ternary that always rendered "No" for non-detected rows.
+  type Vector = { label: string; detected: boolean; isProtection?: boolean };
+  const vectors: Vector[] = [
     { label: 'IP address exposed', detected: true },
     { label: 'Canvas fingerprint captured', detected: true },
     { label: 'WebGL fingerprint captured', detected: true },
     { label: 'Audio fingerprint captured', detected: true },
     { label: 'Cross-browser ID generated', detected: true },
-    { label: 'Ad blocker active', detected: false },
-    { label: 'Do Not Track enabled', detected: false },
-    { label: 'VPN active', detected: false },
+    { label: 'Ad blocker active', detected: false, isProtection: true },
+    { label: 'Do Not Track enabled', detected: false, isProtection: true },
+    { label: 'VPN active', detected: false, isProtection: true },
     { label: 'WebRTC leak detected', detected: true },
   ];
+
+  // "At risk" when an exposure is detected OR a protection is not detected.
+  const atRisk = (v: Vector) => (v.isProtection ? !v.detected : v.detected);
 
   const barColor = score > 70
     ? 'linear-gradient(to right, #f87171, #ef4444)'
@@ -375,14 +383,20 @@ function ExposureAssessment() {
       </div>
 
       <div className="gti-rows">
-        {vectors.map((v) => (
-          <div key={v.label} className="gti-row">
-            <span>{v.label}</span>
-            <span className={`gti-status-dot ${v.detected ? 'gti-status-dot--alert' : 'gti-status-dot--safe'}`}>
-              {v.detected ? (v.label.includes('active') || v.label.includes('enabled') ? 'No' : 'Yes') : (v.label.includes('active') || v.label.includes('enabled') ? 'No' : 'No')}
-            </span>
-          </div>
-        ))}
+        {vectors.map((v) => {
+          const risk = atRisk(v);
+          return (
+            <div key={v.label} className="gti-row">
+              <span>{v.label}</span>
+              <span
+                className={`gti-status-dot ${risk ? 'gti-status-dot--alert' : 'gti-status-dot--safe'}`}
+                aria-label={risk ? 'Exposed' : 'Safe'}
+              >
+                {v.isProtection ? (v.detected ? 'Yes' : 'No') : (v.detected ? 'Yes' : 'No')}
+              </span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

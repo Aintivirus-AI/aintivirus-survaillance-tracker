@@ -8,6 +8,11 @@ import Navbar from './components/Navbar';
 import ThreatMapEmbed from './components/ThreatMapEmbed';
 import GlobalThreatIntelligence from './components/GlobalThreatIntelligence';
 import type { DatasetRecord, DatasetSource } from './types';
+import {
+  getOverpassTags,
+  getRecordSourceUrl,
+  formatRecordCoordinates,
+} from './utils/overpassTags';
 
 const STATUS_LABELS: Record<string, string> = {
   loading: 'Loading',
@@ -198,47 +203,6 @@ function EyeOfProvidence(props: SVGProps<SVGSVGElement>) {
         </g>
       </svg>
   );
-}
-
-function getOverpassTags(
-    record: DatasetRecord,
-): Record<string, string> | undefined {
-  const raw = record.raw;
-  if (!raw || typeof raw !== 'object') {
-    return undefined;
-  }
-  const candidate = (raw as Record<string, unknown>)['tags'];
-  if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) {
-    return undefined;
-  }
-  const entries = Object.entries(candidate).filter(
-      (entry): entry is [string, string] => typeof entry[1] === 'string',
-  );
-  if (entries.length === 0) {
-    return undefined;
-  }
-  return Object.fromEntries(entries);
-}
-
-function getRecordSourceUrl(record: DatasetRecord): string | undefined {
-  const raw = record.raw;
-  if (!raw || typeof raw !== 'object') {
-    return undefined;
-  }
-  const value = (raw as Record<string, unknown>)['sourceUrl'];
-  return typeof value === 'string' ? value : undefined;
-}
-
-function formatRecordCoordinates(record: DatasetRecord): string | undefined {
-  if (
-      typeof record.latitude !== 'number' ||
-      !Number.isFinite(record.latitude) ||
-      typeof record.longitude !== 'number' ||
-      !Number.isFinite(record.longitude)
-  ) {
-    return undefined;
-  }
-  return `${record.latitude.toFixed(5)}, ${record.longitude.toFixed(5)}`;
 }
 
 function FrameStrip() {
