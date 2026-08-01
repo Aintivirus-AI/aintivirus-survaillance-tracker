@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent, SVGProps } from 'react';
 
 import { useDataset } from './hooks/useDataset';
@@ -21,6 +21,61 @@ const STATUS_LABELS: Record<string, string> = {
   cached: 'Cached Copy',
   error: 'Error',
 };
+
+const numberFormat = new Intl.NumberFormat('en-US');
+
+const CATEGORY_LABELS: Record<string, string> = {
+  REDLIGHT_CAMERA: 'Red-light camera',
+  LICENSE_PLATE_READER: 'Plate reader',
+  SPEED_CAMERA: 'Speed camera',
+  FACE_RECOGNITION: 'Face recognition',
+  BODY_CAMERA: 'Body camera',
+  DRONE: 'Drone',
+  GUNSHOT_DETECTION: 'Gunshot detection',
+  OTHER: 'Other',
+};
+
+/** Turn a connector's enum value into something a person would write. */
+function formatCategory(value?: string | null): string {
+  if (!value) return 'Other';
+  const key = value.toUpperCase();
+  if (CATEGORY_LABELS[key]) return CATEGORY_LABELS[key];
+  const words = value.replace(/[_-]+/g, ' ').trim().toLowerCase();
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+function formatCount(value: number): string {
+  return numberFormat.format(value);
+}
+
+/**
+ * "4 min ago" / "3 hours ago". The absolute timestamp stays available as a
+ * tooltip — as a headline metric it wrapped to two lines and orphaned the
+ * meridiem, and "how fresh is this" is the question the number answers.
+ */
+function formatRelative(value?: string, now: number = Date.now()): string {
+  if (!value) return 'Unknown';
+  const then = Date.parse(value);
+  if (Number.isNaN(then)) return 'Unknown';
+
+  const seconds = Math.round((now - then) / 1000);
+  if (seconds < 45) return 'Just now';
+
+  const units: Array<[Intl.RelativeTimeFormatUnit, number]> = [
+    ['second', 60], ['minute', 60], ['hour', 24], ['day', 30], ['month', 12],
+  ];
+  let amount = seconds;
+  let unit: Intl.RelativeTimeFormatUnit = 'second';
+  for (const [name, size] of units) {
+    if (Math.abs(amount) < size) { unit = name; break; }
+    amount = Math.round(amount / size);
+    unit = name === 'second' ? 'minute'
+      : name === 'minute' ? 'hour'
+      : name === 'hour' ? 'day'
+      : name === 'day' ? 'month' : 'year';
+  }
+  return new Intl.RelativeTimeFormat('en', { numeric: 'auto' }).format(-amount, unit);
+}
 
 function formatDate(value?: string): string {
   if (!value) {
@@ -553,7 +608,7 @@ function SourceCard({
       tableLocationContent,
       cardLocationContent,
       categoryClassName: `badge ${record.category ?? 'other'}`,
-      categoryLabel: record.category ?? 'other',
+      categoryLabel: formatCategory(record.category),
       metaItems,
     };
   });
@@ -563,7 +618,7 @@ function SourceCard({
         <header className="source-header">
           <h2>{source.title}</h2>
           <div className="source-meta">
-            <span>Total records: {source.records.length}</span>
+            <span>{formatCount(source.totalRecords ?? source.records.length)} records</span>
             {homepageLink ? (
                 <a href={homepageLink} target="_blank" rel="noreferrer">
                   Source website
@@ -625,6 +680,7 @@ function SourceCard({
           </div>
         </div>
 
+        <div className="records-scroll">
         <table className="records-table">
           <thead>
           <tr>
@@ -690,6 +746,7 @@ function SourceCard({
           )}
           </tbody>
         </table>
+        </div>
 
         <div className="records-list" role="list">
         {pagedRecordViews.length > 0 ? (
@@ -954,16 +1011,21 @@ function App() {
             </div>
             <div className="hero-metrics">
               <div className="metric-card">
-                <h3>Total sources</h3>
-                <strong>{totals.sourceCount}</strong>
+                <h3>Data sources</h3>
+                <strong>{formatCount(totals.sourceCount)}</strong>
+                <span className="metric-note">ingested on a schedule</span>
               </div>
               <div className="metric-card">
-                <h3>Government records tracked</h3>
-                <strong>{totals.recordCount}</strong>
+                <h3>Records tracked</h3>
+                <strong>{formatCount(totals.recordCount)}</strong>
+                <span className="metric-note">cameras &amp; readers on file</span>
               </div>
               <div className="metric-card">
-                <h3>Dataset updated</h3>
-                <strong>{formatDate(lastGeneratedAt)}</strong>
+                <h3>Last updated</h3>
+                <strong className="metric-value-text" title={formatDate(lastGeneratedAt)}>
+                  {formatRelative(lastGeneratedAt)}
+                </strong>
+                <span className="metric-note">{formatDate(lastGeneratedAt)}</span>
               </div>
             </div>
             <div className="hero-quick-links" aria-label="Quick navigation">
@@ -1004,20 +1066,21 @@ function App() {
 
             {dataset ? (
                 orderedSources.length > 0 ? (
-                    <section className="sources-grid">
-                      {orderedSources.map((source) => (
-                          <Fragment key={source.key}>
+                    <>
+                      <section className="sources-grid">
+                        {orderedSources.map((source) => (
                             <SourceCard
+                                key={source.key}
                                 onSelectRecord={handleSelectRecord}
                                 selectedRecordId={selectedRecord?.uid}
                                 source={source}
                             />
-                            {mapInsertionKey && source.key === mapInsertionKey ? (
-                                <InteractiveMap ref={mapPanelRef} record={selectedRecord} />
-                            ) : null}
-                          </Fragment>
-                      ))}
-                    </section>
+                        ))}
+                      </section>
+                      {/* Full-width: the map is the payoff for selecting a row,
+                          and a half-column of world map is unreadable. */}
+                      <InteractiveMap ref={mapPanelRef} record={selectedRecord} />
+                    </>
                 ) : (
                     <div className="empty-state">
                       No datasets available yet. Run the ingestion engine to populate the tracker.

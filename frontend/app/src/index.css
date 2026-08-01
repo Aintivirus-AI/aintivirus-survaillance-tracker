@@ -23,44 +23,45 @@
   --font-display: 'Cal Sans', 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', ui-monospace, monospace;
 
-  /* Surfaces (background layers, from deepest to closest to viewer) */
-  --bg-0: #050914;
-  --bg-1: rgba(10, 16, 32, 0.85);
-  --bg-2: rgba(15, 24, 48, 0.82);
-  --bg-3: rgba(22, 34, 64, 0.85);
+  /* Surfaces — flat, layered by lightness rather than by glow. */
+  --bg-0: #06080f;
+  --bg-1: #0b0f1a;
+  --bg-2: #10141f;
+  --bg-3: #161b28;
 
-  /* Borders */
-  --border-subtle: rgba(59, 130, 246, 0.12);
-  --border-medium: rgba(59, 130, 246, 0.28);
-  --border-strong: rgba(59, 130, 246, 0.55);
-  --border-hairline: rgba(148, 163, 184, 0.12);
+  /* Borders — hairlines. Neutral, so they read as structure, not decoration. */
+  --border-subtle: rgba(148, 163, 184, 0.10);
+  --border-medium: rgba(148, 163, 184, 0.18);
+  --border-strong: rgba(148, 163, 184, 0.30);
+  --border-hairline: rgba(148, 163, 184, 0.08);
 
-  /* Accent colors */
-  --accent-primary: #06b6d4;        /* cyan — main data accent */
-  --accent-secondary: #3b82f6;      /* blue — hover / secondary */
-  --accent-grad: linear-gradient(95deg, #024aec 0.86%, #03beff 96.99%);
-  --accent-cyan-soft: rgba(6, 182, 212, 0.35);
+  /* Accent — one hue, used sparingly so it still means something. */
+  --accent-primary: #22d3ee;
+  --accent-secondary: #38bdf8;
+  --accent-grad: linear-gradient(95deg, #0891b2 0%, #22d3ee 100%);
+  --accent-cyan-soft: rgba(34, 211, 238, 0.22);
+  --accent-wash: rgba(34, 211, 238, 0.08);
 
   /* Semantic */
-  --danger: #f87171;
-  --warn: #facc15;
-  --ok: #4ade80;
+  --danger: #fb7185;
+  --warn: #fbbf24;
+  --ok: #34d399;
 
-  /* Text */
-  --text-hi: #f8fafc;
-  --text-md: #cbd5e1;
-  --text-lo: #94a3b8;
-  --text-dim: rgba(148, 163, 184, 0.6);
+  /* Text — a real ramp, each step doing a distinct job. */
+  --text-hi: #f1f5f9;
+  --text-md: #b6c2d4;
+  --text-lo: #7d8ba1;
+  --text-dim: #5a6679;
 
-  /* Radii */
-  --radius-sm: 10px;
-  --radius-md: 18px;
-  --radius-lg: 26px;
+  /* Radii — tighter. Large radii on data surfaces read as consumer-app. */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
 
-  /* Shadows */
-  --shadow-md: 0 14px 36px rgba(2, 8, 23, 0.45), 0 0 22px rgba(6, 182, 212, 0.12);
-  --shadow-lg: 0 22px 60px rgba(2, 8, 23, 0.65), 0 0 36px rgba(6, 182, 212, 0.18);
-  --shadow-surface: inset 0 1px 0 rgba(148, 163, 184, 0.06), 0 14px 36px rgba(2, 8, 23, 0.45);
+  /* Shadows — depth without neon. */
+  --shadow-md: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.28);
+  --shadow-lg: 0 2px 4px rgba(0, 0, 0, 0.4), 0 16px 48px rgba(0, 0, 0, 0.4);
+  --shadow-surface: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 1px 2px rgba(0, 0, 0, 0.4);
 
   /* Motion */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
@@ -75,11 +76,13 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: linear-gradient(180deg, #020617 0%, #030822 55%, #020617 100%);
+  background: var(--bg-0);
   position: relative;
   overflow-x: hidden;
 }
 
+/* A single, very soft top-light. The previous stack of saturated radial
+   gradients fought every surface drawn on top of it. */
 body::before {
   content: '';
   position: fixed;
@@ -87,30 +90,8 @@ body::before {
   pointer-events: none;
   z-index: -2;
   background:
-    radial-gradient(60% 60% at 18% 18%, rgba(6, 182, 212, 0.22), transparent 70%),
-    radial-gradient(70% 70% at 82% 30%, rgba(49, 46, 129, 0.18), transparent 100%),
-    linear-gradient(135deg, rgba(9, 9, 36, 0.9) 0%, rgba(3, 7, 18, 0.95) 100%);
-  filter: saturate(108%);
-}
-
-/* Faint scan-line overlay; 0.4% opacity so it's felt, not seen. Desktop only. */
-@media (min-width: 900px) {
-  body::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: -1;
-    background:
-      repeating-linear-gradient(
-        0deg,
-        rgba(148, 163, 184, 0.018) 0,
-        rgba(148, 163, 184, 0.018) 1px,
-        transparent 1px,
-        transparent 3px
-      ),
-      radial-gradient(circle at 70% 85%, rgba(14, 165, 233, 0.1), transparent 55%);
-  }
+    radial-gradient(120% 60% at 50% -10%, rgba(34, 211, 238, 0.05), transparent 60%),
+    radial-gradient(90% 50% at 85% 5%, rgba(56, 89, 189, 0.05), transparent 70%);
 }
 
 /* ================================================================== *
@@ -275,9 +256,9 @@ a:hover {
 }
 
 .app {
-  max-width: 1200px;
+  max-width: 1240px;
   margin: 0 auto;
-  padding: 8.5rem 1.5rem 4rem;
+  padding: 7rem 1.5rem 4rem;
   position: relative;
   z-index: 1;
 }
@@ -308,11 +289,12 @@ a:hover {
 }
 
 .app > .frame-strip:first-of-type {
-  margin-bottom: 2.5rem;
+  display: none; /* pushed all content below the fold for no information gain */
 }
 
 .app > .frame-strip:last-of-type {
-  margin-top: 3rem;
+  margin-top: 4rem;
+  opacity: 0.5;
 }
 
 .background-orb {
@@ -819,47 +801,33 @@ body.nav-no-scroll {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-  margin-bottom: 2.5rem;
-  padding: 2.5rem 2.25rem 2.75rem;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 2rem 2rem 1.75rem;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-subtle);
-  background:
-    linear-gradient(135deg, rgba(6, 182, 212, 0.06), transparent 45%),
-    radial-gradient(circle at 10% 10%, rgba(37, 99, 235, 0.18), transparent 55%),
-    var(--bg-1);
-  backdrop-filter: blur(38px);
-  box-shadow: var(--shadow-lg);
+  background: var(--bg-1);
+  box-shadow: var(--shadow-surface);
   overflow: hidden;
 }
 
-/* Faint live-scanline on the hero top edge. */
+/* One hairline of accent along the top edge — enough to signal "live surface"
+   without the pulsing scanline the hero used to run continuously. */
 .hero::before {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    var(--accent-primary) 25%,
-    var(--accent-primary) 75%,
-    transparent 100%
-  );
-  opacity: 0.4;
-  animation: hero-scan 4.5s var(--ease-out) infinite;
-}
-@keyframes hero-scan {
-  0%, 100% { opacity: 0.35; transform: translateX(-5%); }
-  50% { opacity: 0.7; transform: translateX(5%); }
+  background: linear-gradient(90deg, transparent, var(--accent-primary) 50%, transparent);
+  opacity: 0.5;
 }
 
 .hero-top {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
+  align-items: flex-start;
+  gap: 1.25rem;
 }
 
 .hero-controls {
@@ -928,9 +896,10 @@ body.nav-no-scroll {
 }
 
 .brand-logo {
-  width: 138px;
+  width: clamp(48px, 5vw, 64px);
   height: auto;
-  display: block;
+  flex-shrink: 0;
+  opacity: 0.9;
 }
 
 /* ================================================================== *
@@ -1200,9 +1169,53 @@ body.nav-no-scroll {
 
 .hero-metrics {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-top: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 1px;
+  background: var(--border-hairline);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.metric-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.15rem 1.35rem 1.25rem;
+  background: var(--bg-2);
+}
+
+.metric-card h3 {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-lo);
+}
+
+.metric-card strong {
+  font-family: var(--font-mono);
+  /* Tabular figures so digits line up column-to-column as values change. */
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(1.5rem, 2.4vw, 1.9rem);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--text-hi);
+}
+
+.metric-value-text {
+  font-family: var(--font-sans) !important;
+  letter-spacing: -0.01em !important;
+  font-weight: 600 !important;
+}
+
+.metric-note {
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--text-dim);
 }
 
 .hero-quick-links {
@@ -1333,16 +1346,30 @@ body.nav-no-scroll {
 }
 
 button.refresh-button {
-  border: none;
-  border-radius: 14px;
-  padding: 0.75rem 1rem;
-  font-size: 0.95rem;
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-medium);
+  background: var(--bg-3);
+  color: var(--text-hi);
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 500;
   cursor: pointer;
-  color: #ffffff;
-  background: linear-gradient(95deg, #024aec 0.86%, #03beff 96.99%);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 0 0 1px #1b78d0, 0 12px 28px rgba(3, 190, 255, 0.25);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.refresh-button:hover:not(:disabled) {
+  background: var(--accent-wash);
+  border-color: var(--accent-primary);
+  color: var(--text-hi);
+}
+
+.refresh-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 button.refresh-button:hover {
@@ -1355,6 +1382,52 @@ button.refresh-button:hover {
   grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
   gap: 1.5rem;
   align-items: stretch;
+}
+
+/* An odd final card would otherwise sit next to an empty column. */
+.sources-grid > .source-card:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+/* Cap the record area so every card is the same height and the page stays
+   scannable; the list scrolls inside the card instead. A <table> ignores
+   max-height, so the constraint lives on a wrapper. */
+.records-scroll,
+.records-list {
+  max-height: 440px;
+  -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 28px), transparent 100%);
+  mask-image: linear-gradient(180deg, #000 calc(100% - 28px), transparent 100%);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* Room for the scrollbar so rows don't sit under it. */
+  padding-right: 2px;
+}
+
+.records-scroll::-webkit-scrollbar,
+.records-list::-webkit-scrollbar {
+  width: 8px;
+}
+.records-scroll::-webkit-scrollbar-track,
+.records-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.records-scroll::-webkit-scrollbar-thumb,
+.records-list::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 999px;
+}
+.records-scroll::-webkit-scrollbar-thumb:hover,
+.records-list::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
+}
+
+/* Keep the column headers visible while the body scrolls. */
+.records-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--bg-2);
+  backdrop-filter: blur(8px);
 }
 
 .source-card {
@@ -1371,35 +1444,18 @@ button.refresh-button:hover {
   transition: border-color 0.3s var(--ease-out), transform 0.3s var(--ease-out);
 }
 
+/* Priority sources get a slightly lifted surface and an accent hairline,
+   rather than the L-shaped corner brackets that used to sit on top of them. */
 .source-card-priority {
+  border-color: var(--border-medium);
+  box-shadow: var(--shadow-md);
+}
+
+.source-card-priority-unused {
   border-color: var(--border-medium);
   background:
     linear-gradient(135deg, rgba(6, 182, 212, 0.04), transparent 45%),
     var(--bg-2);
-}
-.source-card-priority::before {
-  content: '';
-  position: absolute;
-  top: -1px; left: -1px;
-  width: 22px; height: 22px;
-  border: 2px solid var(--accent-primary);
-  border-right: none;
-  border-bottom: none;
-  border-top-left-radius: var(--radius-md);
-  opacity: 0.7;
-  pointer-events: none;
-}
-.source-card-priority::after {
-  content: '';
-  position: absolute;
-  bottom: -1px; right: -1px;
-  width: 22px; height: 22px;
-  border: 2px solid var(--accent-primary);
-  border-left: none;
-  border-top: none;
-  border-bottom-right-radius: var(--radius-md);
-  opacity: 0.7;
-  pointer-events: none;
 }
 
 .source-controls {
@@ -1492,13 +1548,13 @@ button.refresh-button:hover {
 
 .source-meta {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem 1rem;
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  letter-spacing: 0.5px;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  letter-spacing: 0.01em;
+  text-transform: none;
   color: var(--text-lo);
-  text-transform: uppercase;
 }
 .source-meta a {
   color: var(--accent-primary);
@@ -1518,14 +1574,17 @@ button.refresh-button:hover {
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.3rem 0.6rem;
+  padding: 0.2rem 0.55rem;
   border-radius: 999px;
-  background: rgba(148, 163, 184, 0.18);
-  font-weight: 600;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-3);
+  color: var(--text-md);
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
 }
 
 .badge.license_plate_reader {
@@ -1818,13 +1877,21 @@ button.refresh-button:hover {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  background: var(--bg-2);
+  background: var(--bg-1);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   padding: 1.75rem;
-  backdrop-filter: blur(28px);
-  box-shadow: var(--shadow-md);
-  min-height: 460px;
+  box-shadow: var(--shadow-surface);
+  margin-top: 1.5rem;
+}
+
+/* Give the map real estate — it is the payoff for selecting a record. */
+.map-panel .map-container,
+.map-panel .leaflet-container {
+  height: clamp(420px, 52vh, 620px);
+  width: 100%;
+  border-radius: var(--radius-md);
+  background: var(--bg-0);
 }
 
 .map-panel-header {
@@ -1863,19 +1930,8 @@ button.refresh-button:hover {
 .map-canvas > .hud-corner-tr,
 .map-canvas > .hud-corner-bl,
 .map-canvas > .hud-corner-br {
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  border-color: var(--accent-primary);
-  border-style: solid;
-  z-index: 1000;
-  pointer-events: none;
-  opacity: 0.8;
+  display: none;
 }
-.map-canvas > .hud-corner-tl { top: 6px; left: 6px; border-width: 2px 0 0 2px; }
-.map-canvas > .hud-corner-tr { top: 6px; right: 6px; border-width: 2px 2px 0 0; }
-.map-canvas > .hud-corner-bl { bottom: 6px; left: 6px; border-width: 0 0 2px 2px; }
-.map-canvas > .hud-corner-br { bottom: 6px; right: 6px; border-width: 0 2px 2px 0; }
 
 .map-container {
   height: 100%;
@@ -2021,20 +2077,8 @@ button.refresh-button:hover {
 }
 
 /* Corner brackets render above iframe so the HUD framing is always visible. */
-.threat-map-frame > .hud-corner-tl,
-.threat-map-frame > .hud-corner-tr,
-.threat-map-frame > .hud-corner-bl,
-.threat-map-frame > .hud-corner-br {
-  content: '';
-  position: absolute;
-  width: 18px;
-  height: 18px;
-  border-color: var(--accent-primary);
-  border-style: solid;
-  z-index: 3;
-  pointer-events: none;
-  opacity: 0.85;
-  filter: drop-shadow(0 0 6px rgba(6, 182, 212, 0.45));
+.threat-map-frame > [class^="hud-corner"] {
+  display: none;
 }
 .threat-map-frame > .hud-corner-tl {
   top: 8px; left: 8px;
@@ -3834,7 +3878,14 @@ button.refresh-button:hover {
     padding: 20px;
   }
 
-  .source-card-priority {
+  /* Priority sources get a slightly lifted surface and an accent hairline,
+   rather than the L-shaped corner brackets that used to sit on top of them. */
+.source-card-priority {
+  border-color: var(--border-medium);
+  box-shadow: var(--shadow-md);
+}
+
+.source-card-priority-unused {
     border-color: rgba(59, 130, 246, 0.28);
     background: rgba(8, 13, 28, 0.92);
     box-shadow:
@@ -4179,3 +4230,163 @@ html, body, #root {
   }
 }
 
+
+/* ================================================================== *
+ *  THREAT FEED PLACEHOLDER                                            *
+ *  Replaces an iframe that silently failed and left ~900px of void.   *
+ * ================================================================== */
+.threat-map-placeholder {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.75rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(34, 211, 238, 0.06), transparent 60%),
+    var(--bg-2);
+}
+
+.threat-map-placeholder-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-width: 46ch;
+}
+
+.threat-map-placeholder-eyebrow {
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-primary);
+}
+
+.threat-map-placeholder-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  color: var(--text-hi);
+}
+
+.threat-map-placeholder-copy {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--text-lo);
+}
+
+.threat-map-placeholder-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.threat-map-primary-action,
+.threat-map-secondary-action {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.6rem 1.05rem;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.threat-map-primary-action {
+  border: 1px solid var(--accent-primary);
+  background: var(--accent-wash);
+  color: var(--text-hi);
+}
+
+.threat-map-primary-action:hover {
+  background: rgba(34, 211, 238, 0.16);
+}
+
+.threat-map-secondary-action {
+  border: 1px solid var(--border-medium);
+  background: transparent;
+  color: var(--text-md);
+}
+
+.threat-map-secondary-action:hover {
+  border-color: var(--border-strong);
+  color: var(--text-hi);
+}
+
+/* ================================================================== *
+ *  MOBILE HERO                                                        *
+ *  The hero used a full screen before any data: oversized mark, then  *
+ *  region / status / refresh each on their own full-width row.        *
+ * ================================================================== */
+@media (max-width: 720px) {
+  .app {
+    padding-top: 5.5rem;
+  }
+
+  .hero {
+    padding: 1.5rem 1.25rem 1.5rem;
+    gap: 1.25rem;
+  }
+
+  .brand-logo {
+    width: 44px;
+  }
+
+  .hero-top {
+    align-items: center;
+    text-align: left;
+  }
+
+  /* Status and refresh belong side by side, not stacked full-width. */
+  .hero-controls {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .hero-controls .actions {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .refresh-button {
+    flex: 0 0 auto;
+  }
+
+  .metric-card {
+    padding: 0.95rem 1.1rem 1rem;
+  }
+
+  .metric-card strong {
+    font-size: 1.5rem;
+  }
+
+  .records-scroll,
+  .records-list {
+    max-height: 360px;
+  }
+
+  .threat-map-placeholder {
+    padding: 1.25rem;
+  }
+
+  .threat-map-placeholder-actions {
+    width: 100%;
+  }
+
+  .threat-map-primary-action,
+  .threat-map-secondary-action {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}

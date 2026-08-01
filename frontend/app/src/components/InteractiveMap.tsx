@@ -106,9 +106,15 @@ const InteractiveMap = forwardRef<HTMLElement, InteractiveMapProps>(
             scrollWheelZoom
             zoom={position ? RECORD_ZOOM : DEFAULT_ZOOM}
           >
+            {/* Dark basemap. The default OSM tiles are near-white, which in a
+                dark UI read as a hole punched through the page and wreck any
+                contrast the markers rely on. CARTO's dark_all is free for
+                this use and keeps OSM attribution. */}
             <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+              subdomains="abcd"
+              maxZoom={20}
             />
             {position ? (
               <>
