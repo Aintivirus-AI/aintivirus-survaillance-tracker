@@ -18,17 +18,22 @@ interface QueueCounts {
 describe('HealthService', () => {
   const build = (opts: {
     counts?: QueueCounts;
+    /** Ages (ms before now) of the retained failed jobs. */
+    failedAges?: number[];
     lastIngestedAt?: Date | null;
     sources?: number;
     dbFails?: boolean;
     redisFails?: boolean;
+    getJobsThrows?: boolean;
   }) => {
     const {
-      counts = { waiting: 0, active: 0, failed: 0, delayed: 0, completed: 5 },
+      counts = { waiting: 0, active: 0, failed: 0, delayed: 0, completed: 0 },
+      failedAges = [],
       lastIngestedAt = new Date(),
       sources = 3,
       dbFails = false,
       redisFails = false,
+      getJobsThrows = false,
     } = opts;
 
     const dataSource = {
@@ -51,6 +56,11 @@ describe('HealthService', () => {
         ? () => Promise.reject(new Error('redis down'))
         : () => Promise.resolve()),
       getJobCounts: jest.fn().mockResolvedValue(counts),
+      getJobs: jest.fn(getJobsThrows
+        ? () => Promise.reject(new Error('redis gone'))
+        : () => Promise.resolve(
+            failedAges.map((age) => ({ finishedOn: Date.now() - age })),
+          )),
     } as unknown as Queue;
 
     const config = {
@@ -119,61 +129,86 @@ describe('HealthService', () => {
   });
 
   describe('queue classification', () => {
-    // BullMQ retains failed jobs until explicitly removed, so `failed > 0`
-    // meant one failure months ago pinned the service to "degraded" forever —
-    // which is exactly what production was doing.
-    it('does not degrade on a single old failure among many successes', async () => {
+    // BullMQ retains failed jobs until removed, and the producer sets
+    // removeOnComplete: true — so `completed` is ALWAYS 0 and counting
+    // successes proves nothing. Only failure recency is meaningful.
+    it('does not degrade on a failure from months ago', async () => {
       const report = await build({
-        counts: { failed: 1, completed: 500, waiting: 0 },
+        counts: { failed: 1, completed: 0, waiting: 0 },
+        failedAges: [60 * 24 * HOUR],
       }).check();
 
       expect(report.components.queue.status).toBe('ok');
       expect(report.status).toBe('ok');
     });
 
-    it('degrades when failures dominate recent runs', async () => {
-      const report = await build({
-        counts: { failed: 40, completed: 10, waiting: 0 },
-      }).check();
-
-      expect(report.components.queue.status).toBe('degraded');
-    });
-
-    it('degrades when there are failures and nothing has ever succeeded', async () => {
+    it('degrades on a failure inside the freshness window', async () => {
       const report = await build({
         counts: { failed: 1, completed: 0, waiting: 0 },
+        failedAges: [2 * HOUR],
       }).check();
 
       expect(report.components.queue.status).toBe('degraded');
     });
 
-    it('degrades on a large backlog even with no failures', async () => {
+    it('ignores old failures while flagging a recent one', async () => {
       const report = await build({
-        counts: { failed: 0, completed: 100, waiting: 500 },
+        counts: { failed: 3, completed: 0, waiting: 0 },
+        failedAges: [90 * 24 * HOUR, 60 * 24 * HOUR, HOUR],
       }).check();
 
+      expect(
+        (report.components.queue.meta as { recentFailures: number }).recentFailures,
+      ).toBe(1);
       expect(report.components.queue.status).toBe('degraded');
     });
 
-    it('is ok for an idle queue that has done work', async () => {
+    it('is ok for a queue with no failures at all', async () => {
       const report = await build({
-        counts: { failed: 0, completed: 20, waiting: 0, delayed: 3 },
+        counts: { failed: 0, completed: 0, waiting: 0, delayed: 3 },
       }).check();
 
       expect(report.components.queue.status).toBe('ok');
     });
 
-    it('exposes a failure ratio for monitoring', async () => {
+    it('degrades on a large backlog even with no failures', async () => {
       const report = await build({
-        counts: { failed: 1, completed: 3 },
+        counts: { failed: 0, completed: 0, waiting: 500 },
       }).check();
 
-      expect((report.components.queue.meta as { failureRatio: number }).failureRatio).toBe(0.25);
+      expect(report.components.queue.status).toBe('degraded');
     });
 
-    it('reports a zero ratio when nothing has run', async () => {
-      const report = await build({ counts: { failed: 0, completed: 0 } }).check();
-      expect((report.components.queue.meta as { failureRatio: number }).failureRatio).toBe(0);
+    it('does not inspect failed jobs when there are none', async () => {
+      const service = build({ counts: { failed: 0, waiting: 0 } });
+      await service.check();
+
+      const queue = (service as unknown as { ingestQueue: Queue }).ingestQueue;
+      expect(queue.getJobs).not.toHaveBeenCalled();
+    });
+
+    // "I couldn't check" must not be reported as "it's broken".
+    it('does not invent a failure when the job list is unreadable', async () => {
+      const report = await build({
+        counts: { failed: 2, waiting: 0 },
+        getJobsThrows: true,
+      }).check();
+
+      expect(report.components.queue.status).toBe('ok');
+      expect(
+        (report.components.queue.meta as { recentFailures: number }).recentFailures,
+      ).toBe(0);
+    });
+
+    it('still reports the raw counts for monitoring', async () => {
+      const report = await build({
+        counts: { failed: 2, waiting: 4, delayed: 3, active: 1 },
+        failedAges: [HOUR],
+      }).check();
+
+      expect(report.components.queue.meta).toMatchObject({
+        failed: 2, waiting: 4, delayed: 3, active: 1,
+      });
     });
   });
 

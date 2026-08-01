@@ -101,19 +101,21 @@ export class HealthService {
       );
 
       // BullMQ keeps failed jobs until they are explicitly removed, so
-      // `failed > 0` meant a single failure months ago pinned the service to
-      // "degraded" for the rest of its life. Health should describe the
-      // service *now*: report degraded only when work is currently stuck or
-      // failures dominate recent completions.
+      // `failed > 0` pinned the service to "degraded" for the rest of its life
+      // after a single failure. Counting successes doesn't help either: the
+      // producer sets removeOnComplete: true, so `completed` is always 0.
+      //
+      // What actually indicates a problem *now* is a recent failure or a
+      // backlog that isn't draining.
       const failed = counts.failed ?? 0;
-      const completed = counts.completed ?? 0;
       const waiting = counts.waiting ?? 0;
-      const status = this.classifyQueue(failed, completed, waiting);
+      const recentFailures = failed > 0 ? await this.countRecentFailures() : 0;
+      const status = this.classifyQueue(recentFailures, waiting);
 
       return {
         status,
         latencyMs: performance.now() - started,
-        meta: { ...counts, failureRatio: this.failureRatio(failed, completed) },
+        meta: { ...counts, recentFailures },
       };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -126,24 +128,35 @@ export class HealthService {
     }
   }
 
-  /** Failures as a share of recent terminal jobs. 0 when nothing has run. */
-  private failureRatio(failed: number, completed: number): number {
-    const terminal = failed + completed;
-    if (terminal === 0) return 0;
-    return Math.round((failed / terminal) * 100) / 100;
+  /**
+   * How many retained failures happened inside the freshness window.
+   *
+   * Retained failures are a log, not a status: an ingest that failed once in
+   * June says nothing about whether the queue works today.
+   */
+  private async countRecentFailures(now: number = Date.now()): Promise<number> {
+    try {
+      const jobs = await this.ingestQueue.getJobs(['failed'], 0, 50);
+      const cutoff = now - this.staleAfterMs;
+      return jobs.filter((job) => {
+        const at = job?.finishedOn ?? job?.timestamp ?? 0;
+        return typeof at === 'number' && at >= cutoff;
+      }).length;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.warn(`Could not inspect failed jobs: ${message}`);
+      // Unknown is not the same as broken — don't invent a failure.
+      return 0;
+    }
   }
 
   private classifyQueue(
-    failed: number,
-    completed: number,
+    recentFailures: number,
     waiting: number,
   ): 'ok' | 'degraded' {
     // A backlog means jobs are not being drained right now.
     if (waiting > 50) return 'degraded';
-    // Retained failures with no successes at all is worth flagging...
-    if (failed > 0 && completed === 0) return 'degraded';
-    // ...otherwise judge by proportion, not by the mere existence of a failure.
-    return this.failureRatio(failed, completed) > 0.25 ? 'degraded' : 'ok';
+    return recentFailures > 0 ? 'degraded' : 'ok';
   }
 
   private async buildIngestionSummary(): Promise<
