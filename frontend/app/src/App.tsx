@@ -201,220 +201,108 @@ function UsFlagIcon(props: SVGProps<SVGSVGElement>) {
  *
  * All animation is CSS-driven and respects prefers-reduced-motion.
  */
+/**
+ * The all-seeing eye mark.
+ *
+ * Drawn on a 64-unit grid because that is roughly its rendered size. The
+ * previous mark used a 200-unit viewBox with 0.5–2.2 unit strokes, which at a
+ * 48–64px render is 0.12–0.53 CSS pixels — sub-pixel detail that greyed out
+ * into mush. Aperture blades, a 24-tick rune ring and concentric iris rings
+ * were all being drawn and none of them survived rasterisation.
+ *
+ * Everything here is sized so its smallest feature stays above one device
+ * pixel, and the palette is the UI's own cyan rather than the old glossy
+ * blue-to-amber gradient.
+ */
 function EyeOfProvidence(props: SVGProps<SVGSVGElement>) {
   const { className, ...rest } = props;
   const combinedClassName = ['eye-logo', className].filter(Boolean).join(' ');
 
-  // 12 evenly-spaced rays around the eye at (100, 120), drawn from r=56 to r=90.
-  const rays = Array.from({ length: 12 }, (_, i) => {
-    const angle = (i * 30 - 90) * (Math.PI / 180);
-    const inner = 56;
-    const outer = 90;
-    const cx = 100;
-    const cy = 120;
-    const x1 = cx + Math.cos(angle) * inner;
-    const y1 = cy + Math.sin(angle) * inner;
-    const x2 = cx + Math.cos(angle) * outer;
-    const y2 = cy + Math.sin(angle) * outer;
-    return { d: `M${x1.toFixed(2)} ${y1.toFixed(2)} L${x2.toFixed(2)} ${y2.toFixed(2)}`, i };
-  });
-
-  // 8 aperture blades rotated around the iris — evokes a camera diaphragm.
-  const apertureBlades = Array.from({ length: 8 }, (_, i) => ({ rotate: (i * 45).toFixed(1), i }));
-
   return (
     <svg
       aria-hidden="true"
-      viewBox="0 0 200 200"
+      viewBox="0 0 64 64"
+      fill="none"
       className={combinedClassName}
       {...rest}
     >
       <defs>
-        <linearGradient id="eye-tri-face" x1="50%" y1="0%" x2="50%" y2="100%">
-          <stop offset="0%" stopColor="#0b1a44" />
-          <stop offset="40%" stopColor="#0e3a8a" />
-          <stop offset="80%" stopColor="#0284c7" />
-          <stop offset="100%" stopColor="#38bdf8" />
+        <linearGradient id="eye-edge" x1="32" y1="4" x2="32" y2="58" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#67e8f9" />
+          <stop offset="55%" stopColor="#22d3ee" />
+          <stop offset="100%" stopColor="#0e7490" />
         </linearGradient>
-        <linearGradient id="eye-tri-edge" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#bae6fd" stopOpacity="0.9" />
-          <stop offset="55%" stopColor="#38bdf8" stopOpacity="0.5" />
-          <stop offset="100%" stopColor="#fbbf24" stopOpacity="0.75" />
+        <linearGradient id="eye-face" x1="32" y1="6" x2="32" y2="56" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.16" />
+          <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.03" />
         </linearGradient>
-        <radialGradient id="eye-iris-grad" cx="50%" cy="50%" r="60%">
-          <stop offset="0%" stopColor="#f0f9ff" />
-          <stop offset="30%" stopColor="#38bdf8" />
-          <stop offset="70%" stopColor="#0369a1" />
-          <stop offset="100%" stopColor="#0c1b3a" />
+        <radialGradient id="eye-iris-fill" cx="50%" cy="40%" r="65%">
+          <stop offset="0%" stopColor="#a5f3fc" />
+          <stop offset="55%" stopColor="#22d3ee" />
+          <stop offset="100%" stopColor="#0e7490" />
         </radialGradient>
-        <radialGradient id="eye-pupil-grad" cx="50%" cy="50%" r="55%">
-          <stop offset="0%" stopColor="#0f172a" />
-          <stop offset="70%" stopColor="#020617" />
-          <stop offset="100%" stopColor="#000" />
+        <radialGradient id="eye-glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.55" />
+          <stop offset="100%" stopColor="#22d3ee" stopOpacity="0" />
         </radialGradient>
-        <radialGradient id="eye-sclera-shade" cx="50%" cy="42%" r="60%">
-          <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
-          <stop offset="70%" stopColor="#dbeafe" stopOpacity="0.95" />
-          <stop offset="100%" stopColor="#94a3b8" stopOpacity="0.9" />
-        </radialGradient>
-        <radialGradient id="eye-radar-sweep" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.65" />
-          <stop offset="60%" stopColor="#38bdf8" stopOpacity="0.18" />
-          <stop offset="100%" stopColor="#38bdf8" stopOpacity="0" />
-        </radialGradient>
-        <radialGradient id="eye-aura" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.6" />
-          <stop offset="60%" stopColor="#1d4ed8" stopOpacity="0.25" />
-          <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0" />
-        </radialGradient>
-        <filter id="eye-soft-glow" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="6" />
-        </filter>
-        <filter id="eye-big-glow" x="-60%" y="-60%" width="220%" height="220%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="14" />
-        </filter>
+        {/* The iris is clipped to the lid opening. Without this it renders as
+            a ball sitting on top of the eye rather than inside it. */}
+        <clipPath id="eye-lid-clip">
+          <path d="M21 36.5 Q32 25.5 43 36.5 Q32 47.5 21 36.5 Z" />
+        </clipPath>
       </defs>
 
-      {/* Outer rune ring — slowly rotates */}
-      <g className="eye-rune-ring" transform="translate(100 100)">
-        <circle r="92" fill="none" stroke="url(#eye-tri-edge)" strokeOpacity="0.22" strokeWidth="0.75" />
+      {/* One sensor ring. Two rings plus fine dashes turned into grey fuzz at
+          this size; longer dashes survive rasterisation. */}
+      <g className="eye-rings">
         <circle
-          r="86"
-          fill="none"
-          stroke="rgba(186, 230, 253, 0.35)"
-          strokeWidth="0.6"
-          strokeDasharray="1 3"
-        />
-        {Array.from({ length: 24 }, (_, i) => {
-          const a = (i * 15) * (Math.PI / 180);
-          const r1 = 78;
-          const r2 = i % 2 === 0 ? 84 : 81;
-          return (
-            <line
-              key={i}
-              x1={Math.cos(a) * r1}
-              y1={Math.sin(a) * r1}
-              x2={Math.cos(a) * r2}
-              y2={Math.sin(a) * r2}
-              stroke="rgba(191, 219, 254, 0.55)"
-              strokeWidth={i % 6 === 0 ? 1.4 : 0.7}
-              strokeLinecap="round"
-            />
-          );
-        })}
-      </g>
-
-      {/* Radar sweep behind everything */}
-      <g className="eye-radar-wrap" transform="translate(100 120)">
-        <g className="eye-radar">
-          <path d="M0 0 L 70 -28 A 75 75 0 0 1 70 28 Z" fill="url(#eye-radar-sweep)" />
-        </g>
-      </g>
-
-      {/* Triangle — stroke-drawn edge on top of filled face */}
-      <g className="eye-tri-wrap">
-        <polygon
-          className="eye-tri-halo"
-          points="100 16 184 178 16 178"
-          fill="url(#eye-aura)"
-          filter="url(#eye-big-glow)"
-        />
-        <polygon
-          className="eye-tri-face"
-          points="100 16 184 178 16 178"
-          fill="url(#eye-tri-face)"
-          opacity="0.96"
-        />
-        <polygon
-          className="eye-tri-etch"
-          points="100 32 172 172 28 172"
-          fill="none"
-          stroke="rgba(186, 230, 253, 0.25)"
-          strokeWidth="0.8"
-        />
-        <polygon
-          className="eye-tri-edge"
-          points="100 16 184 178 16 178"
-          fill="none"
-          stroke="url(#eye-tri-edge)"
-          strokeWidth="2.2"
-          strokeLinejoin="round"
+          cx="32" cy="32" r="29"
+          stroke="#22d3ee" strokeOpacity="0.28" strokeWidth="1.1"
+          strokeDasharray="6 7" strokeLinecap="round"
         />
       </g>
 
-      {/* Eye mark — sclera + iris + pupil + highlight, wrapped in a blinking group */}
+      {/* Triangle */}
+      <path d="M32 7.5 L56 51 H8 Z" fill="url(#eye-face)" />
+      <path
+        d="M32 7.5 L56 51 H8 Z"
+        stroke="url(#eye-edge)"
+        strokeWidth="2.4"
+        strokeLinejoin="round"
+      />
+
+      {/* Eye */}
       <g className="eye-mark">
-        <circle
-          className="eye-aura"
-          cx="100"
-          cy="120"
-          r="58"
-          fill="url(#eye-aura)"
-          filter="url(#eye-big-glow)"
-        />
-
+        <circle cx="32" cy="36.5" r="13" fill="url(#eye-glow)" />
         <path
-          className="eye-sclera"
-          d="M38 120 Q100 60 162 120 Q100 180 38 120 Z"
-          fill="url(#eye-sclera-shade)"
-          stroke="rgba(15, 23, 42, 0.65)"
-          strokeWidth="1.6"
+          d="M21 36.5 Q32 25.5 43 36.5 Q32 47.5 21 36.5 Z"
+          fill="#050b14"
+          stroke="url(#eye-edge)"
+          strokeWidth="2"
           strokeLinejoin="round"
         />
-
-        {/* Iris + camera aperture blades */}
-        <g className="eye-iris-group">
-          <circle
-            className="eye-iris"
-            cx="100"
-            cy="120"
-            r="30"
-            fill="url(#eye-iris-grad)"
-            stroke="rgba(186, 230, 253, 0.55)"
-            strokeWidth="1"
-          />
-          <g className="eye-aperture" transform="translate(100 120)">
-            {apertureBlades.map(({ rotate, i }) => (
-              <path
-                key={i}
-                d="M0 -28 Q 10 -22 14 -10 L 0 0 Z"
-                fill="rgba(2, 6, 23, 0.28)"
-                stroke="rgba(186, 230, 253, 0.28)"
-                strokeWidth="0.6"
-                transform={`rotate(${rotate})`}
-              />
-            ))}
+        <g clipPath="url(#eye-lid-clip)">
+          <g className="eye-pupil-group">
+            <circle cx="32" cy="36.5" r="3.9" fill="url(#eye-iris-fill)" />
+            <circle cx="32" cy="36.5" r="1.6" fill="#04141c" />
+            <circle cx="33.2" cy="35.1" r="0.8" fill="#ffffff" fillOpacity="0.92" />
           </g>
-          {/* Concentric iris rings */}
-          <circle cx="100" cy="120" r="22" fill="none" stroke="rgba(125, 211, 252, 0.35)" strokeWidth="0.6" />
-          <circle cx="100" cy="120" r="16" fill="none" stroke="rgba(125, 211, 252, 0.25)" strokeWidth="0.5" />
         </g>
-
-        {/* Pupil — moves subtly via eye-gaze keyframe */}
-        <g className="eye-pupil-group">
-          <circle className="eye-pupil" cx="100" cy="120" r="10.5" fill="url(#eye-pupil-grad)" />
-          <circle className="eye-pupil-ring" cx="100" cy="120" r="10.5" fill="none" stroke="rgba(15, 23, 42, 0.9)" strokeWidth="0.7" />
-          <circle className="eye-highlight-main" cx="103.5" cy="115" r="3.2" fill="rgba(255, 255, 255, 0.95)" />
-          <circle className="eye-highlight-mini" cx="96" cy="124" r="1.2" fill="rgba(255, 255, 255, 0.75)" />
-        </g>
-
-        {/* Lens-reflection crescent */}
+        {/* Lid drawn again on top so the clipped iris meets a clean edge. */}
         <path
-          className="eye-lens-catch"
-          d="M80 102 Q100 86 122 104"
-          fill="none"
-          stroke="rgba(255, 255, 255, 0.35)"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          filter="url(#eye-soft-glow)"
+          d="M21 36.5 Q32 25.5 43 36.5 Q32 47.5 21 36.5 Z"
+          stroke="url(#eye-edge)"
+          strokeWidth="2"
+          strokeLinejoin="round"
         />
       </g>
 
-      {/* 12 radial rays — wave pulse */}
-      <g className="eye-rays" transform-origin="100 120">
-        {rays.map(({ d, i }) => (
-          <path key={i} d={d} style={{ animationDelay: `${i * 0.25}s` }} />
-        ))}
+      {/* A single sweep line, wide enough to read, instead of a radar wedge. */}
+      <g className="eye-scan">
+        <line
+          x1="21" y1="36.5" x2="43" y2="36.5"
+          stroke="#67e8f9" strokeOpacity="0.5" strokeWidth="1" strokeLinecap="round"
+        />
       </g>
     </svg>
   );
