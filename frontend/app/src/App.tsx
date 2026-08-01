@@ -202,21 +202,27 @@ function UsFlagIcon(props: SVGProps<SVGSVGElement>) {
  * All animation is CSS-driven and respects prefers-reduced-motion.
  */
 /**
- * The all-seeing eye mark.
+ * The tracker's mark: a surveillance camera's field of view, seen from above.
  *
- * Drawn on a 64-unit grid because that is roughly its rendered size. The
- * previous mark used a 200-unit viewBox with 0.5–2.2 unit strokes, which at a
- * 48–64px render is 0.12–0.53 CSS pixels — sub-pixel detail that greyed out
- * into mush. Aperture blades, a 24-tick rune ring and concentric iris rings
- * were all being drawn and none of them survived rasterisation.
+ * Replaces the Eye of Providence, which was wrong here for three reasons.
+ * The sibling product (watcher.aintivirus.ai) already owns an eye, so the
+ * family read as one brand twice. The all-seeing eye is the symbol of the
+ * *surveillant* — using it for the tool that maps surveillance inverted the
+ * product's meaning, saying "we are watching you" when the point is the
+ * opposite. And it is the most over-used symbol in the entire privacy space.
  *
- * Everything here is sized so its smallest feature stays above one device
- * pixel, and the palette is the UI's own cyan rather than the old glossy
- * blue-to-amber gradient.
+ * This is drawn from what the dataset actually holds: 39,857 ALPR records,
+ * each a coordinate plus a `direction` bearing and a `camera:mount`. So the
+ * mark is a sensor node with its coverage cone and range arcs — a camera
+ * plotted on a map. It keeps the triangular gesture the brand already reads
+ * as, but flips the perspective: you are looking down at the camera instead
+ * of it looking out at you.
+ *
+ * Drawn on a 64-unit grid so nothing falls below a rendered pixel.
  */
-function EyeOfProvidence(props: SVGProps<SVGSVGElement>) {
+function SurveillanceMark(props: SVGProps<SVGSVGElement>) {
   const { className, ...rest } = props;
-  const combinedClassName = ['eye-logo', className].filter(Boolean).join(' ');
+  const combinedClassName = ['surveillance-mark', className].filter(Boolean).join(' ');
 
   return (
     <svg
@@ -227,82 +233,73 @@ function EyeOfProvidence(props: SVGProps<SVGSVGElement>) {
       {...rest}
     >
       <defs>
-        <linearGradient id="eye-edge" x1="32" y1="4" x2="32" y2="58" gradientUnits="userSpaceOnUse">
+        <linearGradient id="fov-cone" x1="32" y1="14" x2="32" y2="46" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#22d3ee" stopOpacity="0" />
+          <stop offset="60%" stopColor="#22d3ee" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="#67e8f9" stopOpacity="0.5" />
+        </linearGradient>
+        <linearGradient id="fov-edge" x1="32" y1="46" x2="32" y2="14" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#67e8f9" />
-          <stop offset="55%" stopColor="#22d3ee" />
-          <stop offset="100%" stopColor="#0e7490" />
+          <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.7" />
         </linearGradient>
-        <linearGradient id="eye-face" x1="32" y1="6" x2="32" y2="56" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.16" />
-          <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.03" />
-        </linearGradient>
-        <radialGradient id="eye-iris-fill" cx="50%" cy="40%" r="65%">
-          <stop offset="0%" stopColor="#a5f3fc" />
-          <stop offset="55%" stopColor="#22d3ee" />
-          <stop offset="100%" stopColor="#0e7490" />
-        </radialGradient>
-        <radialGradient id="eye-glow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.55" />
+        <radialGradient id="fov-node-glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#67e8f9" stopOpacity="0.75" />
           <stop offset="100%" stopColor="#22d3ee" stopOpacity="0" />
         </radialGradient>
-        {/* The iris is clipped to the lid opening. Without this it renders as
-            a ball sitting on top of the eye rather than inside it. */}
-        <clipPath id="eye-lid-clip">
-          <path d="M21 36.5 Q32 25.5 43 36.5 Q32 47.5 21 36.5 Z" />
-        </clipPath>
       </defs>
 
-      {/* One sensor ring. Two rings plus fine dashes turned into grey fuzz at
-          this size; longer dashes survive rasterisation. */}
-      <g className="eye-rings">
-        <circle
-          cx="32" cy="32" r="29"
-          stroke="#22d3ee" strokeOpacity="0.28" strokeWidth="1.1"
-          strokeDasharray="6 7" strokeLinecap="round"
-        />
+      {/* Registration ticks — the mark reads as something plotted on a grid. */}
+      <g stroke="#22d3ee" strokeOpacity="0.32" strokeWidth="1.5" strokeLinecap="round">
+        <path d="M4 10 V4 H10" />
+        <path d="M54 4 H60 V10" />
+        <path d="M60 54 V60 H54" />
+        <path d="M10 60 H4 V54" />
       </g>
 
-      {/* Triangle */}
-      <path d="M32 7.5 L56 51 H8 Z" fill="url(#eye-face)" />
+      {/* Coverage cone: the camera's field of view, curved at its far range. */}
       <path
-        d="M32 7.5 L56 51 H8 Z"
-        stroke="url(#eye-edge)"
-        strokeWidth="2.4"
-        strokeLinejoin="round"
+        d="M32 46 L10.6 22.2 A32 32 0 0 1 53.4 22.2 Z"
+        fill="url(#fov-cone)"
+      />
+      <path
+        d="M32 46 L10.6 22.2 M32 46 L53.4 22.2"
+        stroke="url(#fov-edge)"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
+      {/* Close the far edge so the cone is a complete shape, not two rays. */}
+      <path
+        d="M10.6 22.2 A32 32 0 0 1 53.4 22.2"
+        stroke="#22d3ee"
+        strokeOpacity="0.45"
+        strokeWidth="1.6"
+        strokeLinecap="round"
       />
 
-      {/* Eye */}
-      <g className="eye-mark">
-        <circle cx="32" cy="36.5" r="13" fill="url(#eye-glow)" />
+      {/* Range arcs, near and far. */}
+      <g className="fov-arcs" stroke="#22d3ee" strokeLinecap="round" fill="none">
+        <path d="M20.6 33.4 A17 17 0 0 1 43.4 33.4" strokeOpacity="0.6" strokeWidth="1.6" />
         <path
-          d="M21 36.5 Q32 25.5 43 36.5 Q32 47.5 21 36.5 Z"
-          fill="#050b14"
-          stroke="url(#eye-edge)"
-          strokeWidth="2"
-          strokeLinejoin="round"
-        />
-        <g clipPath="url(#eye-lid-clip)">
-          <g className="eye-pupil-group">
-            <circle cx="32" cy="36.5" r="3.9" fill="url(#eye-iris-fill)" />
-            <circle cx="32" cy="36.5" r="1.6" fill="#04141c" />
-            <circle cx="33.2" cy="35.1" r="0.8" fill="#ffffff" fillOpacity="0.92" />
-          </g>
-        </g>
-        {/* Lid drawn again on top so the clipped iris meets a clean edge. */}
-        <path
-          d="M21 36.5 Q32 25.5 43 36.5 Q32 47.5 21 36.5 Z"
-          stroke="url(#eye-edge)"
-          strokeWidth="2"
-          strokeLinejoin="round"
+          d="M15.3 27.4 A25 25 0 0 1 48.7 27.4"
+          strokeOpacity="0.4"
+          strokeWidth="1.5"
+          strokeDasharray="4.5 5"
         />
       </g>
 
-      {/* A single sweep line, wide enough to read, instead of a radar wedge. */}
-      <g className="eye-scan">
+      {/* Scan line sweeping the cone, pivoting on the node. */}
+      <g className="fov-sweep">
         <line
-          x1="21" y1="36.5" x2="43" y2="36.5"
-          stroke="#67e8f9" strokeOpacity="0.5" strokeWidth="1" strokeLinecap="round"
+          x1="32" y1="46" x2="32" y2="16"
+          stroke="#a5f3fc" strokeOpacity="0.55" strokeWidth="1.5" strokeLinecap="round"
         />
+      </g>
+
+      {/* The camera itself — a node fixed at a coordinate. */}
+      <g className="fov-node">
+        <circle cx="32" cy="46" r="9" fill="url(#fov-node-glow)" />
+        <circle cx="32" cy="46" r="5.2" stroke="#22d3ee" strokeOpacity="0.55" strokeWidth="1.5" />
+        <circle cx="32" cy="46" r="2.6" fill="#67e8f9" />
       </g>
     </svg>
   );
@@ -870,7 +867,7 @@ function App() {
           <header className="hero">
             <div className="hero-top">
               <div className="brand-block">
-                <EyeOfProvidence className="brand-logo" />
+                <SurveillanceMark className="brand-logo" />
                 <div className="brand-copy">
                   <h1 className="brand">Aintivirus Surveillance Tracker</h1>
                   <p>
