@@ -896,9 +896,9 @@ body.nav-no-scroll {
 }
 
 .brand-logo {
-  /* The sensor ring adds visual padding inside the viewBox, so the mark reads
-     smaller than its box; size it up slightly to balance the title. */
-  width: clamp(56px, 5.5vw, 76px);
+  /* The camera is a wide, short silhouette, so at a given width it reads
+     smaller than the square marks that preceded it. */
+  width: clamp(66px, 6.4vw, 88px);
   height: auto;
   flex-shrink: 0;
   opacity: 1;
@@ -917,47 +917,28 @@ body.nav-no-scroll {
   overflow: visible;
 }
 
-/* The scan line pivots on the camera node and sweeps its coverage cone —
-   the motion the mark depicts, rather than decoration bolted on. */
-.surveillance-mark .fov-sweep {
-  transform-origin: 32px 46px;
-  animation: fov-sweep 5.5s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+/* The camera pans on its mount — the motion the object actually makes. The
+   wall plate stays put, so only the arm and housing swing. */
+.surveillance-mark .cam-pan {
+  transform-origin: 47px 19px;
+  animation: cam-pan 9s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
 
-/* Range arcs breathe faintly, as if refreshing. */
-.surveillance-mark .fov-arcs {
-  animation: fov-arcs-pulse 5.5s ease-in-out infinite;
-}
-
-.surveillance-mark .fov-node {
-  transform-origin: 32px 46px;
-  animation: fov-node-pulse 3.4s ease-in-out infinite;
-}
-
-@keyframes fov-sweep {
-  0%, 100% { transform: rotate(-40deg); opacity: 0.15; }
-  10%      { opacity: 0.7; }
-  50%      { transform: rotate(40deg); opacity: 0.7; }
-  90%      { opacity: 0.15; }
-}
-
-@keyframes fov-arcs-pulse {
-  0%, 100% { opacity: 0.75; }
-  50%      { opacity: 1; }
-}
-
-@keyframes fov-node-pulse {
-  0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.07); }
+@keyframes cam-pan {
+  0%, 100% { transform: rotate(-5deg); }
+  50%      { transform: rotate(5deg); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .surveillance-mark .fov-sweep,
-  .surveillance-mark .fov-arcs,
-  .surveillance-mark .fov-node {
+  .surveillance-mark .cam-pan {
     animation: none;
   }
-  .surveillance-mark .fov-sweep { opacity: 0.45; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .surveillance-mark .cam-pan {
+    animation: none;
+  }
 }
 
 
@@ -3911,9 +3892,7 @@ button.refresh-button:hover {
   .gti-pulse,
   .background-orb,
   .scan-line,
-  .surveillance-mark .fov-sweep,
-  .surveillance-mark .fov-arcs,
-  .surveillance-mark .fov-node {
+  .surveillance-mark .cam-pan {
     animation: none !important;
   }
 }

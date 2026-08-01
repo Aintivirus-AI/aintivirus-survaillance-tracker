@@ -202,23 +202,16 @@ function UsFlagIcon(props: SVGProps<SVGSVGElement>) {
  * All animation is CSS-driven and respects prefers-reduced-motion.
  */
 /**
- * The tracker's mark: a surveillance camera's field of view, seen from above.
+ * The tracker's mark: a bullet CCTV camera on its wall mount.
  *
- * Replaces the Eye of Providence, which was wrong here for three reasons.
- * The sibling product (watcher.aintivirus.ai) already owns an eye, so the
- * family read as one brand twice. The all-seeing eye is the symbol of the
- * *surveillant* — using it for the tool that maps surveillance inverted the
- * product's meaning, saying "we are watching you" when the point is the
- * opposite. And it is the most over-used symbol in the entire privacy space.
+ * Replaces the Eye of Providence, which was the symbol of the *surveillant* —
+ * wrong for a tool that maps surveillance — and was already the identity of the
+ * sibling product at watcher.aintivirus.ai.
  *
- * This is drawn from what the dataset actually holds: 39,857 ALPR records,
- * each a coordinate plus a `direction` bearing and a `camera:mount`. So the
- * mark is a sensor node with its coverage cone and range arcs — a camera
- * plotted on a map. It keeps the triangular gesture the brand already reads
- * as, but flips the perspective: you are looking down at the camera instead
- * of it looking out at you.
- *
- * Drawn on a 64-unit grid so nothing falls below a rendered pixel.
+ * Deliberately NOT an eye at the lens: a glass highlight rather than a pupil,
+ * so the mark reads as equipment rather than re-introducing the symbol it
+ * replaced. Drawn on a 64-unit grid so nothing falls below a rendered pixel at
+ * the 56–76px this displays at.
  */
 function SurveillanceMark(props: SVGProps<SVGSVGElement>) {
   const { className, ...rest } = props;
@@ -233,73 +226,67 @@ function SurveillanceMark(props: SVGProps<SVGSVGElement>) {
       {...rest}
     >
       <defs>
-        <linearGradient id="fov-cone" x1="32" y1="14" x2="32" y2="46" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#22d3ee" stopOpacity="0" />
-          <stop offset="60%" stopColor="#22d3ee" stopOpacity="0.3" />
-          <stop offset="100%" stopColor="#67e8f9" stopOpacity="0.5" />
+        <linearGradient id="cam-body" x1="32" y1="30" x2="32" y2="47" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.26" />
+          <stop offset="100%" stopColor="#0e7490" stopOpacity="0.10" />
         </linearGradient>
-        <linearGradient id="fov-edge" x1="32" y1="46" x2="32" y2="14" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#67e8f9" />
-          <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.7" />
-        </linearGradient>
-        <radialGradient id="fov-node-glow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#67e8f9" stopOpacity="0.75" />
-          <stop offset="100%" stopColor="#22d3ee" stopOpacity="0" />
+        <radialGradient id="cam-glass" cx="38%" cy="32%" r="72%">
+          <stop offset="0%" stopColor="#cffafe" />
+          <stop offset="45%" stopColor="#22d3ee" />
+          <stop offset="100%" stopColor="#083344" />
         </radialGradient>
       </defs>
 
-      {/* Registration ticks — the mark reads as something plotted on a grid. */}
-      <g stroke="#22d3ee" strokeOpacity="0.32" strokeWidth="1.5" strokeLinecap="round">
-        <path d="M4 10 V4 H10" />
-        <path d="M54 4 H60 V10" />
-        <path d="M60 54 V60 H54" />
-        <path d="M10 60 H4 V54" />
-      </g>
-
-      {/* Coverage cone: the camera's field of view, curved at its far range. */}
-      <path
-        d="M32 46 L10.6 22.2 A32 32 0 0 1 53.4 22.2 Z"
-        fill="url(#fov-cone)"
-      />
-      <path
-        d="M32 46 L10.6 22.2 M32 46 L53.4 22.2"
-        stroke="url(#fov-edge)"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-      />
-      {/* Close the far edge so the cone is a complete shape, not two rays. */}
-      <path
-        d="M10.6 22.2 A32 32 0 0 1 53.4 22.2"
-        stroke="#22d3ee"
-        strokeOpacity="0.45"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
-
-      {/* Range arcs, near and far. */}
-      <g className="fov-arcs" stroke="#22d3ee" strokeLinecap="round" fill="none">
-        <path d="M20.6 33.4 A17 17 0 0 1 43.4 33.4" strokeOpacity="0.6" strokeWidth="1.6" />
+      <g className="cam-rig" transform="rotate(-8 32 32) scale(1.07) translate(-2.2 -2.2)">
+        {/* Wall plate — a plate, not a floating bar. */}
+        <rect
+          x="40" y="15" width="14" height="4" rx="1.6"
+          fill="#22d3ee" fillOpacity="0.25" stroke="#22d3ee" strokeWidth="2"
+        />
+        {/* Everything below the plate pans; the plate is bolted to the wall. */}
+        <g className="cam-pan">
+        {/* Arm down to the barrel. */}
         <path
-          d="M15.3 27.4 A25 25 0 0 1 48.7 27.4"
-          strokeOpacity="0.4"
-          strokeWidth="1.5"
-          strokeDasharray="4.5 5"
+          d="M47 19 V23 Q47 28 43.5 29.6"
+          stroke="#22d3ee" strokeOpacity="0.85" strokeWidth="3.2" strokeLinecap="round"
         />
-      </g>
 
-      {/* Scan line sweeping the cone, pivoting on the node. */}
-      <g className="fov-sweep">
-        <line
-          x1="32" y1="46" x2="32" y2="16"
-          stroke="#a5f3fc" strokeOpacity="0.55" strokeWidth="1.5" strokeLinecap="round"
+        {/* Barrel. */}
+        <rect
+          x="15" y="30" width="33" height="17" rx="5"
+          fill="url(#cam-body)" stroke="#22d3ee" strokeWidth="2.4"
         />
-      </g>
 
-      {/* The camera itself — a node fixed at a coordinate. */}
-      <g className="fov-node">
-        <circle cx="32" cy="46" r="9" fill="url(#fov-node-glow)" />
-        <circle cx="32" cy="46" r="5.2" stroke="#22d3ee" strokeOpacity="0.55" strokeWidth="1.5" />
-        <circle cx="32" cy="46" r="2.6" fill="#67e8f9" />
+        {/* Sun hood: a solid shield sitting on the barrel, overhanging the lens. */}
+        <path
+          d="M12.4 27.8 H36 A2 2 0 0 1 36 31.8 H12.4 A2 2 0 0 1 12.4 27.8 Z"
+          fill="#22d3ee"
+        />
+        {/* Front lip of the hood, turning down over the lens. */}
+        <path
+          d="M12.6 29.4 V34"
+          stroke="#22d3ee" strokeWidth="2.6" strokeLinecap="round"
+        />
+        {/* Highlight along the top of the housing. */}
+        <path
+          d="M15 29.2 H32"
+          stroke="#a5f3fc" strokeOpacity="0.65" strokeWidth="1.2" strokeLinecap="round"
+        />
+
+        {/* Lens assembly: bezel, IR ring, glass. */}
+        <circle cx="19.5" cy="38.5" r="8.2" fill="#08131c" stroke="#22d3ee" strokeWidth="2.2" />
+        <circle
+          cx="19.5" cy="38.5" r="6"
+          stroke="#22d3ee" strokeOpacity="0.5" strokeWidth="1.4"
+          strokeDasharray="2.2 2.6"
+        />
+        <circle cx="19.5" cy="38.5" r="3.8" fill="url(#cam-glass)" />
+        {/* Specular streak — glass, not a pupil. */}
+        <path
+          d="M17.2 36.4 Q19 35 20.9 35.6"
+          stroke="#ffffff" strokeOpacity="0.75" strokeWidth="1.3" strokeLinecap="round"
+        />
+        </g>
       </g>
     </svg>
   );
