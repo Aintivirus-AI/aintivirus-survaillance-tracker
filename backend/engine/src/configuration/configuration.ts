@@ -40,6 +40,38 @@ export default () => {
       host: process.env.REDIS_HOST ?? '127.0.0.1',
       port: parseInt(process.env.REDIS_PORT ?? '6379', 10),
     },
+    exports: {
+      /**
+       * How many timestamped snapshots to keep in exports/archive.
+       *
+       * Each snapshot is a full copy of the dataset (~64 MB in production).
+       * Nothing pruned these: 138 accumulated and filled the 28 GB root volume
+       * on 2026-06-17, which stopped ingestion, blocked certbot renewal and
+       * took every aintivirus.ai service offline when the TLS cert expired.
+       */
+      archiveRetention: Math.max(
+        1,
+        parseInt(process.env.EXPORT_ARCHIVE_RETENTION ?? '10', 10) || 10,
+      ),
+      /**
+       * Pretty-print exports. Off by default: indenting a 64 MB dataset adds
+       * tens of megabytes of whitespace to every archived copy and to every
+       * byte served to a client.
+       */
+      pretty: process.env.EXPORT_PRETTY === '1',
+    },
+    health: {
+      /**
+       * Ingestion is considered stale after this long without a successful
+       * run. Previously health reported "ok" purely because sources existed,
+       * so a 45-day ingestion outage looked healthy.
+       */
+      ingestionStaleAfterMs:
+        parseInt(process.env.INGESTION_STALE_AFTER_HOURS ?? '26', 10) *
+        60 *
+        60 *
+        1000,
+    },
     cors: {
       origins: (process.env.CORS_ORIGINS ?? 'http://localhost:5173')
         .split(',')

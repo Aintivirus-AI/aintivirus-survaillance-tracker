@@ -2,7 +2,18 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { DatasetStatus, LatestDataset } from '../types';
 
 const STORAGE_KEY = 'surveillance-tracker-dataset';
+const META_KEY = 'surveillance-tracker-dataset-meta';
 const FALLBACK_URL = '/fallback-dataset.json';
+
+/**
+ * Above this size we don't attempt a localStorage copy.
+ *
+ * The production dataset is ~42 MB. Browsers cap localStorage around 5 MB, so
+ * every load serialised 42 MB on the main thread purely to have setItem throw
+ * QuotaExceededError — which also meant the "cached" fallback path could never
+ * actually fire. Small datasets (dev, self-hosted) still get a real cache.
+ */
+const MAX_CACHEABLE_CHARS = 2_000_000;
 
 /**
  * Base URL for the engine API.
@@ -52,12 +63,42 @@ function getStoredDataset(): LatestDataset | null {
   }
 }
 
+export function isCacheable(serialized: string): boolean {
+  return serialized.length <= MAX_CACHEABLE_CHARS;
+}
+
 function storeDataset(dataset: LatestDataset): void {
   if (typeof window === 'undefined') {
     return;
   }
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(dataset));
+    const serialized = JSON.stringify(dataset);
+
+    if (!isCacheable(serialized)) {
+      // Too big to store. Drop any stale copy so we never serve yesterday's
+      // data from a cache we can no longer refresh, and keep a tiny record of
+      // what we saw for the UI.
+      window.localStorage.removeItem(STORAGE_KEY);
+      window.localStorage.setItem(
+        META_KEY,
+        JSON.stringify({
+          generatedAt: dataset.generatedAt,
+          sources: dataset.sources?.length ?? 0,
+          cached: false,
+        }),
+      );
+      return;
+    }
+
+    window.localStorage.setItem(STORAGE_KEY, serialized);
+    window.localStorage.setItem(
+      META_KEY,
+      JSON.stringify({
+        generatedAt: dataset.generatedAt,
+        sources: dataset.sources?.length ?? 0,
+        cached: true,
+      }),
+    );
   } catch (error) {
     console.warn('Unable to persist dataset cache', error);
   }
@@ -87,9 +128,10 @@ export function useDataset(): UseDatasetResult {
     setState((prev) => ({ ...prev, loading: true, error: undefined }));
 
     try {
-      const response = await fetch(`${API_BASE}/api/dataset/latest`, {
-        cache: 'no-store',
-      });
+      // Deliberately NOT `cache: 'no-store'`. That flag forced a full 42 MB
+      // re-download on every page load and made the server's ETag useless.
+      // `default` lets the browser revalidate and take a 304 when unchanged.
+      const response = await fetch(`${API_BASE}/api/dataset/latest`);
 
       if (!response.ok) {
         throw new Error(`API responded with ${response.status}`);
