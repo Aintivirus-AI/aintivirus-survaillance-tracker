@@ -192,16 +192,29 @@ function UsFlagIcon(props: SVGProps<SVGSVGElement>) {
 /**
  * The tracker's mark: a bullet CCTV camera.
  *
- * Built as a solid silhouette with the lens carved out as negative space,
- * rather than as outlined shapes. Outline-plus-fill with uniform stroke weights
- * and round caps is stock-icon construction; a mark wants a confident filled
- * form whose detail is subtracted, so it holds up small, in one colour, or
- * stamped on something.
+ * The silhouette is Phosphor's `security-camera` in the Fill weight, not drawn
+ * here. Phosphor Icons is MIT licensed, (c) 2023 Phosphor Icons —
+ * https://github.com/phosphor-icons/core. Hand-drawing it produced a recognisable camera but
+ * kept betraying the usual tells — a barrel that read as a box, a sunshade that
+ * either fused into the housing or detached from it, foreshortening that never
+ * quite resolved. Phosphor is drawn on a consistent grid by people who do this
+ * full time, and the shape is simply better.
  *
- * Geometry is a circle-and-rectangle system on a 64-unit grid: a semicircular
- * front face of r9 at (21,44) carries straight into the barrel, so the lens
- * face and the barrel share a diameter the way the real housing does. Nothing
- * is drawn below one rendered pixel at the 66-88px this displays at.
+ * What is ours is the articulation. The icon ships as a single flat path, so a
+ * straight drop-in would be a better-drawn camera that cannot move. Splitting
+ * it lets the housing pan on its bracket while the wall post stays bolted:
+ *
+ *   - the shared outline renders inside `.cam-pan`, clipped to x < 239 so the
+ *     post is trimmed off it;
+ *   - the post is then drawn once, statically, over the joint.
+ *
+ * The cut sits one unit inside the post's left edge and the static post is
+ * widened by the same unit to overlap it. Cutting level with the edge instead
+ * leaves the post's vertical boundary antialiasing into a hairline nub, and
+ * cutting short of it without the overlap opens a notch in the arm.
+ *
+ * The pivot is the bracket joint at (244,168), a few units from that cut, so
+ * the arm's cut end travels well under half a unit and stays covered.
  */
 function SurveillanceMark(props: SVGProps<SVGSVGElement>) {
   const { className, ...rest } = props;
@@ -210,61 +223,33 @@ function SurveillanceMark(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
       aria-hidden="true"
-      viewBox="0 0 64 64"
+      viewBox="-20 -34 296 296"
       fill="none"
       className={combinedClassName}
       {...rest}
     >
       <defs>
-        {/* The lens is a hole in the housing, not a shape stacked on top:
-            knock out a ring, then restore the core. */}
-        <mask id="cam-lens-mask">
-          <rect x="0" y="0" width="64" height="64" fill="#fff" />
-          <circle cx="21" cy="44" r="7" fill="#000" />
-          {/* Seam splitting sunshade from barrel. Without it the two forms
-              fuse into one mass and the shade survives only as a wedge at the
-              front, which reads as a notch. It stops short of the rear so a
-              bridge of housing remains: cut the whole length and the shade
-              detaches into a second floating object. */}
-          <rect x="0" y="33.4" width="40" height="1.7" fill="#000" />
-          <circle cx="21" cy="44" r="3.2" fill="#fff" />
-        </mask>
+        {/* Deliberately applied outside `.cam-pan`. A clip nested inside the
+            rotating group would swing along with it and trim nothing. */}
+        <clipPath id="cam-body-clip">
+          <rect x="-32" y="-48" width="271" height="352" />
+        </clipPath>
       </defs>
 
-      <g className="cam-pan">
-        {/* Static tilt about the arm's top. A wall-mounted camera points down
-            at what it watches; upright, the silhouette read as an appliance. */}
-        <g transform="rotate(-15 41.4 18)">
-          {/*
-            One continuous outline for visor, barrel and lens face.
-
-            The barrel is a capsule: semicircular caps of r9 at both ends
-            joined by straight top and bottom edges, so front face and barrel
-            share a diameter. A rounded rectangle here reads as a box; only the
-            full cap reads as a tube seen side-on. The shade stops short of
-            the rear cap, which is where real housings end it too. The sunshade is a 7-unit hood along the whole
-            top, overhanging the lens face by 6 units and closed off by a
-            vertical front edge — thinner than this and the -15deg tilt makes it
-            read as a blade rather than a hood.
-          */}
-          <path
-            d="M6 26 H43 V35 A9 9 0 1 1 43 53 H21 A9 9 0 1 1 21 35 H6 Z"
-            fill="#22d3ee"
-            mask="url(#cam-lens-mask)"
-          />
-
-          {/* Mount arm. Flat second tone rather than alpha: the arm and the plate
-              overlap, and two translucent shapes composite into a muddy third
-              value exactly where they cross. */}
-          <rect x="39" y="17" width="4.8" height="12" fill="#177f96" />
+      <g clipPath="url(#cam-body-clip)">
+        <g className="cam-pan">
+          <path fill="#22d3ee" d="M248 136a8 8 0 0 0-8 8v16h-44.69L177 141.66l50.34-50.35a16 16 0 0 0 0-22.62L189.66 31l-18.35-18.31a16 16 0 0 0-22.63 0L2.92 158.94A10 10 0 0 0 10 176h39.37l35.32 35.31a16 16 0 0 0 22.62 0L165.66 153L184 171.31a15.86 15.86 0 0 0 11.31 4.69H240v16a8 8 0 0 0 16 0v-48a8 8 0 0 0-8-8M160 24l12.69 12.69L49.37 160H24.46Z" />
         </g>
       </g>
 
-      {/* Wall plate stays bolted while the camera pans. */}
-      <rect x="33" y="13" width="17" height="5.5" rx="2.2" fill="#177f96" />
+      {/* Wall post. Flat second tone rather than alpha — it overlaps the arm,
+          and two translucent shapes composite into a muddy third value exactly
+          where they cross. */}
+      <rect x="238" y="136" width="18" height="56" rx="8" fill="#177f96" />
     </svg>
   );
 }
+
 
 function FrameStrip() {
   return (

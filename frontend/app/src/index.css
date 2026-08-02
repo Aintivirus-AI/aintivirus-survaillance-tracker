@@ -920,19 +920,16 @@ body.nav-no-scroll {
 /* The camera pans on its mount — the motion the object actually makes. The
    wall plate stays put, so only the arm and housing swing. */
 .surveillance-mark .cam-pan {
-  transform-origin: 41.4px 18px;
+  transform-origin: 244px 168px;
   animation: cam-pan 9s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
 
+/* The pivot sits at the bracket joint on the far right, so the housing's far
+   end is ~242 units out and sweeps ~4x further than it did when the mark
+   rotated about its own centre. 3deg keeps the swing inside the viewBox. */
 @keyframes cam-pan {
-  0%, 100% { transform: rotate(-5deg); }
-  50%      { transform: rotate(5deg); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .surveillance-mark .cam-pan {
-    animation: none;
-  }
+  0%, 100% { transform: rotate(-3deg); }
+  50%      { transform: rotate(3deg); }
 }
 
 @media (prefers-reduced-motion: reduce) {
