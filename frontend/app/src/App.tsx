@@ -13,6 +13,7 @@ import {
   getRecordSourceUrl,
   formatRecordCoordinates,
 } from './utils/overpassTags';
+import { computeTotals } from './utils/totals';
 
 const STATUS_LABELS: Record<string, string> = {
   loading: 'Loading',
@@ -189,29 +190,18 @@ function UsFlagIcon(props: SVGProps<SVGSVGElement>) {
 }
 
 /**
- * All-Seeing Eye — the brand-mark for the tracker.
+ * The tracker's mark: a bullet CCTV camera.
  *
- * Composition (outer → inner):
- *   1. A rotating rune ring (surveillance bearings, tick marks)
- *   2. A counter-clockwise radar sweep behind the triangle
- *   3. The sacred triangle with inner etching + glowing edge
- *   4. A layered eye: aura, sclera, iris with camera-aperture blades,
- *      pupil, specular highlights
- *   5. Twelve radial rays that pulse in a rolling wave
+ * Built as a solid silhouette with the lens carved out as negative space,
+ * rather than as outlined shapes. Outline-plus-fill with uniform stroke weights
+ * and round caps is stock-icon construction; a mark wants a confident filled
+ * form whose detail is subtracted, so it holds up small, in one colour, or
+ * stamped on something.
  *
- * All animation is CSS-driven and respects prefers-reduced-motion.
- */
-/**
- * The tracker's mark: a bullet CCTV camera on its wall mount.
- *
- * Replaces the Eye of Providence, which was the symbol of the *surveillant* —
- * wrong for a tool that maps surveillance — and was already the identity of the
- * sibling product at watcher.aintivirus.ai.
- *
- * Deliberately NOT an eye at the lens: a glass highlight rather than a pupil,
- * so the mark reads as equipment rather than re-introducing the symbol it
- * replaced. Drawn on a 64-unit grid so nothing falls below a rendered pixel at
- * the 56–76px this displays at.
+ * Geometry is a circle-and-rectangle system on a 64-unit grid: a semicircular
+ * front face of r9 at (21,44) carries straight into the barrel, so the lens
+ * face and the barrel share a diameter the way the real housing does. Nothing
+ * is drawn below one rendered pixel at the 66-88px this displays at.
  */
 function SurveillanceMark(props: SVGProps<SVGSVGElement>) {
   const { className, ...rest } = props;
@@ -226,68 +216,52 @@ function SurveillanceMark(props: SVGProps<SVGSVGElement>) {
       {...rest}
     >
       <defs>
-        <linearGradient id="cam-body" x1="32" y1="30" x2="32" y2="47" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.26" />
-          <stop offset="100%" stopColor="#0e7490" stopOpacity="0.10" />
-        </linearGradient>
-        <radialGradient id="cam-glass" cx="38%" cy="32%" r="72%">
-          <stop offset="0%" stopColor="#cffafe" />
-          <stop offset="45%" stopColor="#22d3ee" />
-          <stop offset="100%" stopColor="#083344" />
-        </radialGradient>
+        {/* The lens is a hole in the housing, not a shape stacked on top:
+            knock out a ring, then restore the core. */}
+        <mask id="cam-lens-mask">
+          <rect x="0" y="0" width="64" height="64" fill="#fff" />
+          <circle cx="21" cy="44" r="7" fill="#000" />
+          {/* Seam splitting sunshade from barrel. Without it the two forms
+              fuse into one mass and the shade survives only as a wedge at the
+              front, which reads as a notch. It stops short of the rear so a
+              bridge of housing remains: cut the whole length and the shade
+              detaches into a second floating object. */}
+          <rect x="0" y="33.4" width="40" height="1.7" fill="#000" />
+          <circle cx="21" cy="44" r="3.2" fill="#fff" />
+        </mask>
       </defs>
 
-      <g className="cam-rig" transform="rotate(-8 32 32) scale(1.07) translate(-2.2 -2.2)">
-        {/* Wall plate — a plate, not a floating bar. */}
-        <rect
-          x="40" y="15" width="14" height="4" rx="1.6"
-          fill="#22d3ee" fillOpacity="0.25" stroke="#22d3ee" strokeWidth="2"
-        />
-        {/* Everything below the plate pans; the plate is bolted to the wall. */}
-        <g className="cam-pan">
-        {/* Arm down to the barrel. */}
-        <path
-          d="M47 19 V23 Q47 28 43.5 29.6"
-          stroke="#22d3ee" strokeOpacity="0.85" strokeWidth="3.2" strokeLinecap="round"
-        />
+      <g className="cam-pan">
+        {/* Static tilt about the arm's top. A wall-mounted camera points down
+            at what it watches; upright, the silhouette read as an appliance. */}
+        <g transform="rotate(-15 41.4 18)">
+          {/*
+            One continuous outline for visor, barrel and lens face.
 
-        {/* Barrel. */}
-        <rect
-          x="15" y="30" width="33" height="17" rx="5"
-          fill="url(#cam-body)" stroke="#22d3ee" strokeWidth="2.4"
-        />
+            The barrel is a capsule: semicircular caps of r9 at both ends
+            joined by straight top and bottom edges, so front face and barrel
+            share a diameter. A rounded rectangle here reads as a box; only the
+            full cap reads as a tube seen side-on. The shade stops short of
+            the rear cap, which is where real housings end it too. The sunshade is a 7-unit hood along the whole
+            top, overhanging the lens face by 6 units and closed off by a
+            vertical front edge — thinner than this and the -15deg tilt makes it
+            read as a blade rather than a hood.
+          */}
+          <path
+            d="M6 26 H43 V35 A9 9 0 1 1 43 53 H21 A9 9 0 1 1 21 35 H6 Z"
+            fill="#22d3ee"
+            mask="url(#cam-lens-mask)"
+          />
 
-        {/* Sun hood: a solid shield sitting on the barrel, overhanging the lens. */}
-        <path
-          d="M12.4 27.8 H36 A2 2 0 0 1 36 31.8 H12.4 A2 2 0 0 1 12.4 27.8 Z"
-          fill="#22d3ee"
-        />
-        {/* Front lip of the hood, turning down over the lens. */}
-        <path
-          d="M12.6 29.4 V34"
-          stroke="#22d3ee" strokeWidth="2.6" strokeLinecap="round"
-        />
-        {/* Highlight along the top of the housing. */}
-        <path
-          d="M15 29.2 H32"
-          stroke="#a5f3fc" strokeOpacity="0.65" strokeWidth="1.2" strokeLinecap="round"
-        />
-
-        {/* Lens assembly: bezel, IR ring, glass. */}
-        <circle cx="19.5" cy="38.5" r="8.2" fill="#08131c" stroke="#22d3ee" strokeWidth="2.2" />
-        <circle
-          cx="19.5" cy="38.5" r="6"
-          stroke="#22d3ee" strokeOpacity="0.5" strokeWidth="1.4"
-          strokeDasharray="2.2 2.6"
-        />
-        <circle cx="19.5" cy="38.5" r="3.8" fill="url(#cam-glass)" />
-        {/* Specular streak — glass, not a pupil. */}
-        <path
-          d="M17.2 36.4 Q19 35 20.9 35.6"
-          stroke="#ffffff" strokeOpacity="0.75" strokeWidth="1.3" strokeLinecap="round"
-        />
+          {/* Mount arm. Flat second tone rather than alpha: the arm and the plate
+              overlap, and two translucent shapes composite into a muddy third
+              value exactly where they cross. */}
+          <rect x="39" y="17" width="4.8" height="12" fill="#177f96" />
         </g>
       </g>
+
+      {/* Wall plate stays bolted while the camera pans. */}
+      <rect x="33" y="13" width="17" height="5.5" rx="2.2" fill="#177f96" />
     </svg>
   );
 }
@@ -747,16 +721,7 @@ function App() {
   const [selectedRecord, setSelectedRecord] = useState<DatasetRecord | null>(null);
   const mapPanelRef = useRef<HTMLElement | null>(null);
 
-  const totals = useMemo(() => {
-    if (!dataset) {
-      return { recordCount: 0, sourceCount: 0 };
-    }
-    const recordCount = dataset.sources.reduce(
-        (sum, source) => sum + source.records.length,
-        0,
-    );
-    return { recordCount, sourceCount: dataset.sources.length };
-  }, [dataset]);
+  const totals = useMemo(() => computeTotals(dataset), [dataset]);
 
   const orderedSources = useMemo(() => {
     if (!dataset) {

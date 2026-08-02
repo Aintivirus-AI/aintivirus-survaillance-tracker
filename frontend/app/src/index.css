@@ -920,7 +920,7 @@ body.nav-no-scroll {
 /* The camera pans on its mount — the motion the object actually makes. The
    wall plate stays put, so only the arm and housing swing. */
 .surveillance-mark .cam-pan {
-  transform-origin: 47px 19px;
+  transform-origin: 41.4px 18px;
   animation: cam-pan 9s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
 
