@@ -38,7 +38,7 @@ interface OverpassSampleEntry extends OverpassNode {}
 
 const OVERPASS_ENDPOINT = 'https://overpass-api.de/api/interpreter';
 const OVERPASS_QUERY = `
-[out:json][timeout:60];
+[out:json][timeout:180];
 area["ISO3166-1"="US"]->.usa;
 (
   node
@@ -74,9 +74,14 @@ export class OverpassConnector implements Connector {
 
   constructor(private readonly geocoder: NominatimGeocoder) {
     this.http = axios.create({
-      timeout: 60000,
+      // The server-side [timeout:180] in the query governs; give the HTTP
+      // layer headroom beyond it so we fail on the server's terms, not ours.
+      timeout: 240000,
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
+        // overpass-api.de rejects default library User-Agents with a 406.
+        'User-Agent':
+          'stuffmonger-surveillance-tracker/2.0 (+https://tracker.stuffmonger.com; contact=uhnlit@gmail.com)',
       },
     });
     this.fallback = this.loadSampleEntries();

@@ -1,0 +1,82 @@
+name: Nightly dataset ingestion
+
+# The old architecture kept a VM alive 24/7 (NestJS + Redis + SQLite) to run
+# what is fundamentally this: a nightly batch that produces one JSON document.
+# This workflow runs the same connectors in CI and publishes to R2 through the
+# site's authenticated /api/internal/ endpoints. Free on a public repo; there
+# is no server to fill its disk or get suspended.
+
+on:
+  schedule:
+    # 06:17 UTC — off the top of the hour, when public APIs are least hammered.
+    - cron: '17 6 * * *'
+  workflow_dispatch: {}
+
+concurrency:
+  group: ingest
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    defaults:
+      run:
+        working-directory: backend/engine
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/engine/package-lock.json
+
+      - name: Install engine dependencies
+        run: npm ci
+
+      - name: Pull the geocode cache
+        # Nominatim allows ~1 req/s. The cache turns a multi-hour cold run into
+        # minutes; only genuinely new camera nodes get geocoded live.
+        run: |
+          curl -sf -H "Authorization: Bearer $INGEST_TOKEN" \
+            "$SITE/api/internal/geocache" -o geocode-cache.json \
+            && echo "cache: $(wc -c < geocode-cache.json) bytes" \
+            || echo "no cache yet (first run)"
+        env:
+          SITE: ${{ vars.SITE_URL || 'https://tracker.stuffmonger.com' }}
+          INGEST_TOKEN: ${{ secrets.INGEST_TOKEN }}
+
+      - name: Collect
+        run: npx tsx src/standalone/run-once.ts
+        env:
+          OUT_PATH: latest.json
+          GEOCODE_CACHE_PATH: geocode-cache.json
+          # A connector that fails tonight carries yesterday's block instead of
+          # blanking its source.
+          PREVIOUS_DATASET_URL: ${{ vars.SITE_URL || 'https://tracker.stuffmonger.com' }}/api/dataset/latest
+
+      - name: Publish dataset
+        run: |
+          curl -sf -X PUT -H "Authorization: Bearer $INGEST_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data-binary @latest.json \
+            "$SITE/api/internal/dataset"
+          echo
+          echo "published $(wc -c < latest.json) bytes"
+        env:
+          SITE: ${{ vars.SITE_URL || 'https://tracker.stuffmonger.com' }}
+          INGEST_TOKEN: ${{ secrets.INGEST_TOKEN }}
+
+      - name: Push the geocode cache back
+        if: always()
+        run: |
+          if [ -s geocode-cache.json ]; then
+            curl -sf -X PUT -H "Authorization: Bearer $INGEST_TOKEN" \
+              -H "Content-Type: application/json" \
+              --data-binary @geocode-cache.json \
+              "$SITE/api/internal/geocache" && echo "cache stored"
+          fi
+        env:
+          SITE: ${{ vars.SITE_URL || 'https://tracker.stuffmonger.com' }}
+          INGEST_TOKEN: ${{ secrets.INGEST_TOKEN }}
