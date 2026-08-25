@@ -2,9 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent, SVGProps } from 'react';
 
 import { useDataset } from './hooks/useDataset';
-import Footer from './components/Footer';
 import InteractiveMap from './components/InteractiveMap';
-import Navbar from './components/Navbar';
 import ThreatMapEmbed from './components/ThreatMapEmbed';
 import GlobalThreatIntelligence from './components/GlobalThreatIntelligence';
 import type { DatasetRecord, DatasetSource } from './types';
@@ -238,18 +236,59 @@ function SurveillanceMark(props: SVGProps<SVGSVGElement>) {
 
       <g clipPath="url(#cam-body-clip)">
         <g className="cam-pan">
-          <path fill="#22d3ee" d="M248 136a8 8 0 0 0-8 8v16h-44.69L177 141.66l50.34-50.35a16 16 0 0 0 0-22.62L189.66 31l-18.35-18.31a16 16 0 0 0-22.63 0L2.92 158.94A10 10 0 0 0 10 176h39.37l35.32 35.31a16 16 0 0 0 22.62 0L165.66 153L184 171.31a15.86 15.86 0 0 0 11.31 4.69H240v16a8 8 0 0 0 16 0v-48a8 8 0 0 0-8-8M160 24l12.69 12.69L49.37 160H24.46Z" />
+          <path fill="#f4f2ee" d="M248 136a8 8 0 0 0-8 8v16h-44.69L177 141.66l50.34-50.35a16 16 0 0 0 0-22.62L189.66 31l-18.35-18.31a16 16 0 0 0-22.63 0L2.92 158.94A10 10 0 0 0 10 176h39.37l35.32 35.31a16 16 0 0 0 22.62 0L165.66 153L184 171.31a15.86 15.86 0 0 0 11.31 4.69H240v16a8 8 0 0 0 16 0v-48a8 8 0 0 0-8-8M160 24l12.69 12.69L49.37 160H24.46Z" />
         </g>
       </g>
 
       {/* Wall post. Flat second tone rather than alpha — it overlaps the arm,
           and two translucent shapes composite into a muddy third value exactly
           where they cross. */}
-      <rect x="238" y="136" width="18" height="56" rx="8" fill="#177f96" />
+      <rect x="238" y="136" width="18" height="56" rx="8" fill="#e11111" />
     </svg>
   );
 }
 
+
+/**
+ * Case-file chrome, after stuffmonger.com: thin viewfinder brackets pinned to
+ * the viewport corners, and a REC strip along the bottom — pulsing red dot,
+ * typewriter case label, running timecode. Fixed and pointer-inert; it frames
+ * the page without participating in layout.
+ */
+function CaseFrame() {
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    const started = Date.now();
+    const id = window.setInterval(() => setElapsed(Date.now() - started), 1000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  const t = Math.floor(elapsed / 1000);
+  const timecode = [
+    String(Math.floor(t / 3600)).padStart(2, '0'),
+    String(Math.floor((t % 3600) / 60)).padStart(2, '0'),
+    String(t % 60).padStart(2, '0'),
+  ].join(':');
+
+  const caseDate = new Date().toLocaleDateString('en-US', {
+    month: '2-digit', day: '2-digit', year: '2-digit',
+  }).split('/').join('\u00b7');
+
+  return (
+    <div aria-hidden="true" className="case-frame">
+      <span className="case-corner tl" />
+      <span className="case-corner tr" />
+      <span className="case-corner bl" />
+      <span className="case-corner br" />
+      <div className="case-strip">
+        <span className="case-rec"><span className="case-rec-dot" />REC</span>
+        <span className="case-label">CASE {caseDate}&nbsp;&nbsp;&nbsp;SUBJECT — SURVEILLANCE NETWORK</span>
+        <span className="case-time">00:{timecode.slice(3)}:{String(elapsed % 1000).padStart(3, '0').slice(0, 2)}</span>
+      </div>
+    </div>
+  );
+}
 
 function FrameStrip() {
   return (
@@ -796,7 +835,7 @@ function App() {
   return (
       <>
         <div aria-hidden="true" className="background-orb" />
-        <Navbar />
+        <CaseFrame />
 
         <div className="app">
           <FrameStrip />
@@ -806,7 +845,7 @@ function App() {
               <div className="brand-block">
                 <SurveillanceMark className="brand-logo" />
                 <div className="brand-copy">
-                  <h1 className="brand">Aintivirus Surveillance Tracker</h1>
+                  <h1 className="brand">Surveillance Tracker</h1>
                   <p>
                     Live situational awareness across license plate readers, red-light
                     cams, and municipal surveillance programs.
@@ -915,7 +954,6 @@ function App() {
           </main>
 
           <FrameStrip />
-          <Footer />
         </div>
       </>
   );
