@@ -21,11 +21,26 @@ import {
 export class CachingGeocoder {
   private cache = new Map<string, ReverseGeocodeResult | null>();
   private dirty = false;
+  private liveLookups = 0;
 
   constructor(
     private readonly inner: NominatimGeocoder,
     private readonly cachePath: string,
+    /**
+     * Cap on live Nominatim lookups per run. The OSM ALPR set grew from 14k
+     * nodes to 84k+ in 2026; an uncapped cold run would hold Nominatim's
+     * 1 req/s lane for a full day. Uncached nodes beyond the budget resolve
+     * to undefined this run — they keep their coordinates, render on the map,
+     * and get enriched by later runs as the cache accumulates.
+     */
+    private readonly liveBudget = Number(
+      process.env.GEOCODE_BUDGET ?? '4000',
+    ),
   ) {}
+
+  get liveLookupsUsed(): number {
+    return this.liveLookups;
+  }
 
   private key(params: ReverseGeocodeParams): string {
     // 5 decimal places ≈ 1.1m — well under the spacing of distinct cameras.
@@ -65,10 +80,19 @@ export class CachingGeocoder {
     if (this.cache.has(k)) {
       return this.cache.get(k) ?? undefined;
     }
+    if (this.liveLookups >= this.liveBudget) {
+      return undefined;
+    }
+    this.liveLookups++;
     try {
       const result = await this.inner.reverseGeocode(params);
       this.cache.set(k, result ?? null);
       if (result) this.dirty = true;
+      // Checkpoint periodically: a killed run keeps the geocoding it paid for.
+      if (this.dirty && this.liveLookups % 200 === 0) {
+        await this.save();
+        this.dirty = true;
+      }
       return result;
     } catch (error) {
       // Cache the miss for this run only, so one bad coordinate doesn't get

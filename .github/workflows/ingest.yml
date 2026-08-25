@@ -52,6 +52,9 @@ jobs:
         env:
           OUT_PATH: latest.json
           GEOCODE_CACHE_PATH: geocode-cache.json
+          # ~2.4h of Nominatim per night, inside the job timeout. The OSM ALPR
+          # corpus is ~85k nodes; the cache converges within ~9 nightly runs.
+          GEOCODE_BUDGET: '8000'
           # A connector that fails tonight carries yesterday's block instead of
           # blanking its source.
           PREVIOUS_DATASET_URL: ${{ vars.SITE_URL || 'https://tracker.stuffmonger.com' }}/api/dataset/latest
